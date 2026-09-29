@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F3F1EC;color:#1B1D22;font-family:'IBM Plex Sans',sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#1B1D22}a:hover{color:#4A5BD4}
+select,input,button{font-family:inherit}
+@media print{body *{visibility:hidden!important}#call-brief,#call-brief *{visibility:visible!important}[data-brief-backdrop]{position:static!important;background:none!important;padding:0!important;overflow:visible!important}#call-brief{position:absolute!important;left:0;top:0;width:100%!important;max-width:none!important;box-shadow:none!important;border:none!important;max-height:none!important;overflow:visible!important}[data-noprint]{display:none!important}}
+</style>
+</helmet>
+<div style="min-height:100vh;display:flex;flex-direction:column">
+  <header style="background:#1B1D22;color:#F3F1EC;padding:0 28px;display:flex;align-items:center;gap:28px;min-height:56px;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="width:22px;height:22px;border-radius:5px;background:#D9492F;display:grid;place-items:center;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:#fff">OC</div>
+      <div style="font-weight:600;font-size:15px;letter-spacing:-0.01em;white-space:nowrap">Operator Churn Intelligence</div>
+    </div>
+    <nav style="display:flex;gap:2px;align-self:stretch;flex-wrap:wrap">
+      <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="4">
+        <button onClick="{{ t.go }}" style="background:none;border:none;color:{{ t.color }};font-size:13px;font-weight:500;padding:0 12px;cursor:pointer;border-bottom:2px solid {{ t.border }};min-height:56px;white-space:nowrap">{{ t.label }}</button>
+      </sc-for>
+    </nav>
+    <div style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#A9ACB4;white-space:nowrap">Snapshot {{ month }} · BQML v1</div>
+  </header>
+
+  <div style="background:#FFFFFF;border-bottom:1px solid #E2DFD8;padding:12px 28px;display:flex;gap:20px;align-items:flex-end;flex-wrap:wrap">
+    <label style="display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:#6A6E78">Operator
+      <input value="{{ search }}" onChange="{{ onSearch }}" placeholder="Search name or ID" style="height:34px;border:1px solid #D6D2CA;border-radius:6px;padding:0 10px;font-size:13px;width:220px;text-transform:none;letter-spacing:0;color:#1B1D22;background:#FBFAF8">
+    </label>
+    <label style="display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:#6A6E78">Price agreement
+      <select value="{{ agreement }}" onChange="{{ onAgreement }}" style="height:34px;border:1px solid #D6D2CA;border-radius:6px;padding:0 8px;font-size:13px;min-width:170px;color:#1B1D22;background:#FBFAF8">
+        <sc-for list="{{ agreementOpts }}" as="o" hint-placeholder-count="3"><option value="{{ o }}">{{ o }}</option></sc-for>
+      </select>
+    </label>
+    <label style="display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:#6A6E78">Predicted month
+      <select value="{{ month }}" onChange="{{ onMonth }}" style="height:34px;border:1px solid #D6D2CA;border-radius:6px;padding:0 8px;font-size:13px;min-width:130px;color:#1B1D22;background:#FBFAF8">
+        <option value="Sep 2026">Sep 2026</option><option value="Aug 2026">Aug 2026</option><option value="Jul 2026">Jul 2026</option>
+      </select>
+    </label>
+    <div style="display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:#6A6E78">Customer segment
+      <div style="display:flex;border:1px solid #D6D2CA;border-radius:6px;overflow:hidden;height:34px">
+        <sc-for list="{{ segOpts }}" as="s" hint-placeholder-count="4">
+          <button onClick="{{ s.pick }}" style="border:none;background:{{ s.bg }};color:{{ s.color }};font-size:13px;font-weight:500;padding:0 14px;cursor:pointer;letter-spacing:0;text-transform:none">{{ s.label }}</button>
+        </sc-for>
+      </div>
+    </div>
+    <div style="margin-left:auto;display:flex;gap:14px;font-size:12px;color:#6A6E78;align-items:center;flex-wrap:wrap">
+      <sc-for list="{{ tiers }}" as="t" hint-placeholder-count="3">
+        <span style="display:flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:2px;background:{{ t.color }}"></span>{{ t.label }} <span style="font-family:'IBM Plex Mono',monospace">{{ t.range }}</span></span>
+      </sc-for>
+    </div>
+  </div>
+
+  <sc-if value="{{ briefOpen }}" hint-placeholder-val="{{ false }}">
+    <div data-brief-backdrop="1" onClick="{{ closeBrief }}" style="position:fixed;inset:0;background:rgba(27,29,34,0.45);z-index:50;display:flex;justify-content:center;align-items:flex-start;padding:40px 16px;overflow-y:auto">
+      <div id="call-brief" onClick="{{ stop }}" style="background:#fff;border-radius:10px;width:100%;max-width:760px;box-shadow:0 20px 60px rgba(0,0,0,0.25);padding:32px 36px;display:flex;flex-direction:column;gap:22px;box-sizing:border-box;color:#1B1D22">
+        <div data-noprint="1" style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
+          <button onClick="{{ copyBrief }}" style="height:32px;border:1px solid #D6D2CA;background:#FBFAF8;border-radius:6px;padding:0 12px;font-size:12px;font-weight:500;cursor:pointer">{{ copyLabel }}</button>
+          <button onClick="{{ printBrief }}" style="height:32px;border:none;background:#1B1D22;color:#fff;border-radius:6px;padding:0 12px;font-size:12px;font-weight:600;cursor:pointer">Print / Save as PDF</button>
+          <button onClick="{{ closeBrief }}" style="height:32px;border:1px solid #D6D2CA;background:#fff;border-radius:6px;padding:0 12px;font-size:12px;cursor:pointer">Close</button>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;border-bottom:2px solid #1B1D22;padding-bottom:14px">
+          <div>
+            <div style="font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#6A6E78">Sales call brief · {{ month }}</div>
+            <div style="font-size:26px;font-weight:600;letter-spacing:-0.015em;margin-top:4px">{{ op.name }}</div>
+            <div style="font-size:12px;color:#6A6E78;font-family:'IBM Plex Mono',monospace;margin-top:4px">{{ op.id }} · Segment {{ op.seg }} · {{ op.agreementLabel }}</div>
+          </div>
+          <div style="display:flex;gap:24px">
+            <div><div style="font-size:11px;font-weight:600;color:#6A6E78;text-transform:uppercase;letter-spacing:0.06em">Risk</div><div style="font-size:22px;font-weight:600;color:{{ op.tierText }}">{{ op.tierLabel }}</div></div>
+            <div><div style="font-size:11px;font-weight:600;color:#6A6E78;text-transform:uppercase;letter-spacing:0.06em">Revenue at risk (90d)</div><div style="font-size:22px;font-weight:600;font-family:'IBM Plex Mono',monospace">{{ op.revFmt }}</div></div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:#6A6E78">Situation</div>
+          <div style="font-size:14px;line-height:1.6;text-wrap:pretty">{{ op.summary }}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:#6A6E78">Talking points</div>
+          <sc-for list="{{ brief.points }}" as="p" hint-placeholder-count="3">
+            <div style="display:grid;grid-template-columns:22px minmax(0,1fr);gap:8px;font-size:14px;line-height:1.5"><span style="font-family:'IBM Plex Mono',monospace;color:#6A6E78">{{ p.n }}</span><span style="text-wrap:pretty">{{ p.text }}</span></div>
+          </sc-for>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:#6A6E78">Product lines</div>
+          <div style="display:grid;grid-template-columns:minmax(0,2fr) 90px 100px 100px 100px;font-size:13px">
+            <sc-for list="{{ brief.head }}" as="h" hint-placeholder-count="5"><div style="padding:6px 4px;font-size:11px;font-weight:600;color:#6A6E78;border-bottom:1px solid #D6D2CA;text-align:{{ h.align }}">{{ h.label }}</div></sc-for>
+            <sc-for list="{{ lineRows }}" as="r" hint-placeholder-count="4">
+              <div style="padding:7px 4px;border-bottom:1px solid #EEEBE5;font-weight:500">{{ r.name }}</div>
+              <div style="padding:7px 4px;border-bottom:1px solid #EEEBE5;color:{{ r.statusInk }}">{{ r.status }}</div>
+              <div style="padding:7px 4px;border-bottom:1px solid #EEEBE5;text-align:right;font-family:'IBM Plex Mono',monospace">{{ r.revFmt }}</div>
+              <div style="padding:7px 4px;border-bottom:1px solid #EEEBE5;text-align:right;font-family:'IBM Plex Mono',monospace;color:{{ r.trendColor }}">{{ r.trendFmt }}</div>
+              <div style="padding:7px 4px;border-bottom:1px solid #EEEBE5;text-align:right;font-family:'IBM Plex Mono',monospace;color:{{ r.priceColor }}">{{ r.priceFmt }}</div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px">
+          <div style="display:flex;flex-direction:column;gap:6px"><div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:#6A6E78">Call notes</div><div style="border-bottom:1px solid #D6D2CA;height:28px"></div><div style="border-bottom:1px solid #D6D2CA;height:28px"></div><div style="border-bottom:1px solid #D6D2CA;height:28px"></div></div>
+          <div style="display:flex;flex-direction:column;gap:6px"><div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:#6A6E78">Outcome</div><div style="display:flex;flex-direction:column;gap:8px;font-size:13px;padding-top:6px"><span>☐ Staying — no change</span><span>☐ Price review agreed</span><span>☐ At risk — follow up</span></div></div>
+        </div>
+        <div style="font-size:11px;color:#6A6E78;border-top:1px solid #EEEBE5;padding-top:10px">Prepared {{ brief.date }} · Operator Churn Intelligence · Internal use only</div>
+      </div>
+    </div>
+  </sc-if>
+
+  <main style="flex:1;padding:24px 28px 48px;max-width:1440px;width:100%;box-sizing:border-box;margin:0 auto">
+  <sc-if value="{{ isOverview }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;flex-wrap:wrap;gap:16px">
+        <div style="background:#fff;border:1px solid #E2DFD8;border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;gap:10px;flex:1 1 260px">
+          <div style="font-size:12px;font-weight:600;color:#6A6E78;text-transform:uppercase;letter-spacing:0.06em">Total operators</div>
+          <div style="display:flex;align-items:baseline;gap:12px"><div style="font-size:40px;font-weight:600;letter-spacing:-0.02em;font-family:'IBM Plex Mono',monospace">{{ kpi.ops }}</div><div style="font-family:'IBM Plex Mono',monospace;font-size:14px;color:#B63A24;font-weight:500">{{ kpi.opsDelta }}</div></div>
+          <div style="font-size:13px;color:#6A6E78">vs {{ kpi.opsLast }} last month ({{ lastMonth }})</div>
+        </div>
+        <div style="background:#fff;border:1px solid #E2DFD8;border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;gap:12px;flex:2 1 520px;min-width:0">
+          <div style="font-size:12px;font-weight:600;color:#6A6E78;text-transform:uppercase;letter-spacing:0.06em">Revenue by lookback window</div>
+          <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px">
+            <sc-for list="{{ kpi.rev }}" as="r" hint-placeholder-count="3">
+              <div style="display:flex;flex-direction:column;gap:4px;border-left:1px solid #E2DFD8;padding-left:14px">
+                <div style="font-size:12px;color:#6A6E78">{{ r.label }}</div>
+                <div style="font-size:28px;font-weight:600;font-family:'IBM Plex Mono',monospace;letter-spacing:-0.02em">{{ r.cur }}</div>
+                <div style="font-size:12px;color:#6A6E78;font-family:'IBM Plex Mono',monospace">last {{ r.last }} <span style="color:{{ r.dColor }}">{{ r.delta }}</span></div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px">
+        <sc-for list="{{ tierCards }}" as="t" hint-placeholder-count="3">
+          <div style="background:#fff;border:1px solid #E2DFD8;border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;gap:12px;border-top:4px solid {{ t.color }}">
+            <div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font-size:14px;font-weight:600">{{ t.label }}</div><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#6A6E78">p {{ t.range }}</div></div>
+            <div style="display:flex;align-items:baseline;gap:10px"><div style="font-size:34px;font-weight:600;font-family:'IBM Plex Mono',monospace;letter-spacing:-0.02em">{{ t.count }}</div><div style="font-size:13px;color:#6A6E78">operators · {{ t.pct }}</div></div>
+            <div style="display:flex;height:8px;border-radius:4px;overflow:hidden;background:#EEEBE5;gap:2px">
+              <sc-for list="{{ t.split }}" as="s" hint-placeholder-count="3"><div style="width:{{ s.w }};background:{{ s.bg }}"></div></sc-for>
+            </div>
+            <div style="display:flex;gap:14px;font-size:12px;color:#6A6E78;font-family:'IBM Plex Mono',monospace">
+              <sc-for list="{{ t.split }}" as="s" hint-placeholder-count="3"><span>{{ s.seg }} {{ s.v }}</span></sc-for>
+            </div>
+          </div>
+        </sc-for>
+        <div style="background:#1B1D22;color:#F3F1EC;border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;gap:12px">
+          <div style="font-size:14px;font-weight:600">Lost operators</div>
+          <div style="display:flex;align-items:baseline;gap:10px"><div style="font-size:34px;font-weight:600;font-family:'IBM Plex Mono',monospace">{{ lost.total }}</div><div style="font-size:13px;color:#A9ACB4">flagged High in {{ lastMonth }}, stopped buying</div></div>
+          <div style="display:flex;gap:14px;font-size:12px;color:#C9CBD1;font-family:'IBM Plex Mono',monospace;margin-top:auto">
+            <sc-for list="{{ lost.split }}" as="s" hint-placeholder-count="3"><span>{{ s.seg }} {{ s.v }}</span></sc-for>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:16px">
+        <div style="background:#fff;border:1px solid #E2DFD8;border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;gap:12px">
+          <div><div style="font-size:14px;font-weight:600">Tier movement</div><div style="font-size:12px;color:#6A6E78;margin-top:2px">{{ month }} vs {{ lastMonth }}</div></div>
+          <div style="display:grid;grid-template-columns:1.4fr repeat(5,minmax(0,1fr));font-size:13px">
+            <sc-for list="{{ moveHead }}" as="h" hint-placeholder-count="6"><div style="padding:8px 6px;font-size:11px;font-weight:600;color:#6A6E78;text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid #E2DFD8;text-align:{{ h.align }}">{{ h.label }}</div></sc-for>
+            <sc-for list="{{ moveRows }}" as="r" hint-placeholder-count="3">
+              <div style="padding:10px 6px;border-bottom:1px solid #EEEBE5;display:flex;align-items:center;gap:8px;font-weight:500;white-space:nowrap"><span style="width:8px;height:8px;border-radius:2px;background:{{ r.color }}"></span>{{ r.label }}</div>
+              <div style="padding:10px 6px;border-bottom:1px solid #EEEBE5;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:600">{{ r.cur }}</div>
+              <div style="padding:10px 6px;border-bottom:1px solid #EEEBE5;text-align:right;font-family:'IBM Plex Mono',monospace;color:#6A6E78">{{ r.last }}</div>
+              <div style="padding:10px 6px;border-bottom:1px solid #EEEBE5;text-align:right;font-family:'IBM Plex Mono',monospace">{{ r.same }}</div>
+              <div style="padding:10px 6px;border-bottom:1px solid #EEEBE5;text-align:right;font-family:'IBM Plex Mono',monospace">{{ r.nw }}</div>
+              <div style="padding:10px 6px;border-bottom:1px solid #EEEBE5;text-align:right;font-family:'IBM Plex Mono',monospace;color:{{ r.netColor }}">{{ r.net }}</div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="background:#fff;border:1px solid #E2DFD8;border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;gap:12px">
+          <div><div style="font-size:14px;font-weight:600">Operators trending churn</div><div style="font-size:12px;color:#6A6E78;margin-top:2px">Carried over from last snapshot by segment, plus new entrants</div></div>
+          <div style="display:grid;grid-template-columns:1.4fr repeat(4,minmax(0,1fr));font-size:13px">
+            <sc-for list="{{ trendHead }}" as="h" hint-placeholder-count="5"><div style="padding:8px 6px;font-size:11px;font-weight:600;color:#6A6E78;text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid #E2DFD8;text-align:{{ h.align }}">{{ h.label }}</div></sc-for>
+            <sc-for list="{{ trendRows }}" as="r" hint-placeholder-count="3">
+              <div style="padding:10px 6px;border-bottom:1px solid #EEEBE5;display:flex;align-items:center;gap:8px;font-weight:500;white-space:nowrap"><span style="width:8px;height:8px;border-radius:2px;background:{{ r.color }}"></span>{{ r.label }}</div>
+              <div style="padding:10px 6px;border-bottom:1px solid #EEEBE5;text-align:right;font-family:'IBM Plex Mono',monospace">{{ r.S }}</div>
+              <div style="padding:10px 6px;border-bottom:1px solid #EEEBE5;text-align:right;font-family:'IBM Plex Mono',monospace">{{ r.M }}</div>
+              <div style="padding:10px 6px;border-bottom:1px solid #EEEBE5;text-align:right;font-family:'IBM Plex Mono',monospace">{{ r.L }}</div>
+              <div style="padding:10px 6px;border-bottom:1px solid #EEEBE5;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:600">{{ r.nw }}</div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+
+      <div style="background:#fff;border:1px solid #E2DFD8;border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px"><div style="font-size:14px;font-weight:600">Operators by churn probability</div><div style="display:flex;align-items:center;gap:12px"><div style="font-size:12px;color:#6A6E78">{{ rowCount }} shown · click a row to open analysis</div><button onClick="{{ exportOps }}" style="height:30px;border:1px solid #D6D2CA;background:#FBFAF8;border-radius:6px;padding:0 12px;font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap" style-hover="background:#F1EFEA">Export CSV</button></div></div>
+        <div style="overflow-x:auto">
+          <div style="display:grid;grid-template-columns:minmax(220px,2.2fr) 70px minmax(150px,1.4fr) 110px minmax(140px,1.2fr) 90px 90px 80px;font-size:13px;min-width:960px">
+            <sc-for list="{{ tableHead }}" as="h" hint-placeholder-count="8"><div style="padding:8px 8px;font-size:11px;font-weight:600;color:#6A6E78;text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid #E2DFD8;text-align:{{ h.align }}">{{ h.label }}</div></sc-for>
+          </div>
+          <sc-for list="{{ rows }}" as="r" hint-placeholder-count="8">
+            <div onClick="{{ r.open }}" style="display:grid;grid-template-columns:minmax(220px,2.2fr) 70px minmax(150px,1.4fr) 110px minmax(140px,1.2fr) 90px 90px 80px;font-size:13px;min-width:960px;cursor:pointer;border-bottom:1px solid #EEEBE5;align-items:center" style-hover="background:#F8F6F2">
+              <div style="padding:10px 8px"><div style="font-weight:500">{{ r.name }}</div><div style="font-size:11px;color:#6A6E78;font-family:'IBM Plex Mono',monospace">{{ r.id }}</div></div>
+              <div style="padding:10px 8px;font-family:'IBM Plex Mono',monospace">{{ r.seg }}</div>
+              <div style="padding:10px 8px;color:#454850">{{ r.agreementLabel }}</div>
+              <div style="padding:10px 8px;text-align:right;font-family:'IBM Plex Mono',monospace">{{ r.revFmt }}</div>
+              <div style="padding:10px 8px;display:flex;align-items:center;gap:8px"><div style="flex:1;height:6px;background:#EEEBE5;border-radius:3px;overflow:hidden"><div style="height:100%;width:{{ r.probW }};background:{{ r.tierColor }}"></div></div><span style="font-family:'IBM Plex Mono',monospace;font-weight:600;width:36px;text-align:right">{{ r.probFmt }}</span></div>
+              <div style="padding:10px 8px;text-align:right;font-family:'IBM Plex Mono',monospace;color:{{ r.dColor }}">{{ r.dFmt }}</div>
+              <div style="padding:10px 8px"><span style="font-size:11px;font-weight:600;padding:3px 8px;border-radius:10px;background:{{ r.tierBg }};color:{{ r.tierInk }};white-space:nowrap">{{ r.tierLabel }}</span></div>
+              <div style="padding:10px 8px;text-align:right;font-size:12px;font-weight:600;color:#4A5BD4">Explain →</div>
+            </div>
+          </sc-for>
+          <sc-if value="{{ noRows }}" hint-placeholder-val="{{ false }}"><div style="padding:24px 8px;color:#6A6E78;font-size:13px">No operators match these filters.</div></sc-if>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isDrill }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div style="background:#fff;border:1px solid #E2DFD8;border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-left:6px solid {{ op.tierColor }}">
+        <select value="{{ op.id }}" onChange="{{ onPickOp }}" style="height:32px;border:1px solid #D6D2CA;border-radius:6px;padding:0 8px;font-size:13px;font-weight:600;background:#FBFAF8;max-width:260px">
+          <sc-for list="{{ opOpts }}" as="o" hint-placeholder-count="5"><option value="{{ o.id }}">{{ o.name }}</option></sc-for>
+        </select>
+        <span style="color:#A9ACB4">›</span>
+        <select value="{{ line.idx }}" onChange="{{ onPickLine }}" style="height:32px;border:1px solid #D6D2CA;border-radius:6px;padding:0 8px;font-size:13px;background:#FBFAF8">
+          <sc-for list="{{ lineOpts }}" as="o" hint-placeholder-count="4"><option value="{{ o.v }}">{{ o.label }}</option></sc-for>
+        </select>
+        <span style="color:#A9ACB4">›</span>
+        <select value="{{ prod.key }}" onChange="{{ onPickProd }}" style="height:32px;border:1px solid #D6D2CA;border-radius:6px;padding:0 8px;font-size:13px;background:#FBFAF8">
+          <sc-for list="{{ prodOpts }}" as="o" hint-placeholder-count="2"><option value="{{ o.v }}">{{ o.label }}</option></sc-for>
+        </select>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:10px;font-size:12px;color:#6A6E78">
+          <span style="font-family:'IBM Plex Mono',monospace">{{ op.id }} · Seg {{ op.seg }} · {{ op.agreementLabel }}</span>
+          <span style="font-size:11px;font-weight:600;padding:3px 8px;border-radius:10px;background:{{ op.tierBg }};color:{{ op.tierInk }};white-space:nowrap">{{ op.tierLabel }} · {{ op.probFmt }}</span>
+          <button onClick="{{ exportOp }}" style="height:30px;border:1px solid #D6D2CA;background:#FBFAF8;border-radius:6px;padding:0 12px;font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap;color:#1B1D22" style-hover="background:#F1EFEA">Export CSV</button>
+          <button onClick="{{ openBrief }}" style="height:30px;border:none;background:#1B1D22;color:#fff;border-radius:6px;padding:0 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap" style-hover="background:#343740">Sales call brief</button>
+        </div>
+      </div>
+
+      <sc-if value="{{ isOperator }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div style="background:#fff;border:1px solid #E2DFD8;border-radius:10px;padding:20px 22px;display:flex;gap:28px;align-items:center;flex-wrap:wrap">
+            <div style="flex:1;min-width:260px">
+              <div style="font-size:11px;font-weight:600;color:#6A6E78;text-transform:uppercase;letter-spacing:0.06em">Operator</div>
+              <div style="font-size:26px;font-weight:600;letter-spacing:-0.015em;margin-top:4px">{{ op.name }}</div>
+            </div>
+            <div style="display:flex;gap:28px;flex-wrap:wrap">
+              <div><div style="font-size:11px;font-weight:600;color:#6A6E78;text-transform:uppercase;letter-spacing:0.06em">Churn probability</div><div style="font-size:32px;font-weight:600;font-family:'IBM Plex Mono',monospace;color:{{ op.tierText }}">{{ op.probFmt }}</div></div>
+              <div><div style="font-size:11px;font-weight:600;color:#6A6E78;text-transform:uppercase;letter-spacing:0.06em">Revenue at risk (90d)</div><div style="font-size:32px;font-weight:600;font-family:'IBM Plex Mono',monospace">{{ op.revFmt }}</div></div>
+              <div><div style="font-size:11px;font-weight:600;color:#6A6E78;text-transform:uppercase;letter-spacing:0.06em">Product lines</div><div style="font-size:32px;font-weight:600;font-family:'IBM Plex Mono',monospace">{{ op.linesNow }}<span style="font-size:16px;color:#6A6E78"> / {{ op.linesPeak }}</span></div></div>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-wrap:wrap;gap:16px">
+            <div style="background:#fff;border:1px solid #E2DFD8;border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;gap:14px;flex:2 1 560px;min-width:0">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px"><div style="font-size:14px;font-weight:600">12-month volume</div><div style="font-size:12px;color:#6A6E78;font-family:'IBM Plex Mono',monospace">units / month · {{ op.volChange }} vs prior 3 mo</div></div>
+              <div style="display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:6px;height:180px;align-items:end">
+                <sc-for list="{{ op.vol }}" as="b" hint-placeholder-count="12">
+                  <div style="display:flex;flex-direction:column;justify-content:flex-end;height:100%;gap:4px;align-items:center">
+                    <div style="font-size:10px;color:#6A6E78;font-family:'IBM Plex Mono',monospace">{{ b.v }}</div>
+                    <div style="width:100%;height:{{ b.h }};background:{{ b.bg }};border-radius:3px 3px 0 0"></div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:6px;font-size:11px;color:#6A6E78;text-align:center;font-family:'IBM Plex Mono',monospace">
+                <sc-for list="{{ op.vol }}" as="b" hint-placeholder-count="12"><div>{{ b.m }}</div></sc-for>
+              </div>
+            </div>
+            <div style="background:#fff;border:1px solid #E2DFD8;border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;gap:14px;flex:1 1 300px">
+              <div style="font-size:14px;font-weight:600">Purchase recency</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div><div style="font-size:12px;color:#6A6E78">Days since last purchase</div><div style="font-size:28px;font-weight:600;font-family:'IBM Plex Mono',monospace">{{ op.daysSince }}</div></div>
+                <div><div style="font-size:12px;color:#6A6E78">Typical interval</div><div style="font-size:28px;font-weight:600;font-family:'IBM Plex Mono',monospace">{{ op.avgInterval }}d</div></div>
+              </div>
+              <div style="border-top:1px solid #EEEBE5;padding-top:12px;display:flex;flex-direction:column;gap:8px">
+                <div style="display:flex;justify-content:space-between;font-size:13px"><span>Recency ratio</span><span style="font-family:'IBM Plex Mono',monospace;font-weight:600;color:{{ op.ratioColor }}">{{ op.ratioFmt }}</span></div>
+                <div style="position:relative;height:8px;background:linear-gradient(90deg,#CFE6DC 0%,#CFE6DC 33%,#F3E1B5 33%,#F3E1B5 60%,#F4CFC6 60%);border-radius:4px">
+                  <div style="position:absolute;top:-4px;left:{{ op.ratioPos }};width:3px;height:16px;background:#1B1D22;border-radius:2px"></div>
+                </div>
+                <div style="display:flex;justify-content:space-between;font-size:11px;color:#6A6E78;font-family:'IBM Plex Mono',monospace"><span>0×</span><span>1×</span><span>1.8×</span><span>3×</span></div>
+                <div style="font-size:12px;color:#6A6E78;text-wrap:pretty">{{ op.ratioNote }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-wrap:wrap;gap:16px">
+            <div style="background:#fff;border:1px solid #E2DFD8;border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;gap:14px;flex:1 1 300px">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px"><div style="font-size:14px;font-weight:600">Product lines purchased</div><div style="font-size:12px;color:#6A6E78;font-family:'IBM Plex Mono',monospace">peak {{ op.linesPeak }} → now {{ op.linesNow }}</div></div>
+              <div style="display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:4px;height:110px;align-items:end">
+                <sc-for list="{{ op.lines }}" as="b" hint-placeholder-count="12">
+                  <div style="display:flex;flex-direction:column;gap:2px;justify-content:flex-end;height:100%">
+                    <sc-for list="{{ b.cells }}" as="c" hint-placeholder-count="4"><div style="height:12px;background:{{ c.bg }};border-radius:2px"></div></sc-for>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:4px;font-size:10px;color:#6A6E78;text-align:center;font-family:'IBM Plex Mono',monospace">
+                <sc-for list="{{ op.lines }}" as="b" hint-placeholder-count="12"><div>{{ b.m }}</div></sc-for>
+              </div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px 12px;font-size:11px;color:#6A6E78">
+                <sc-for list="{{ op.lineData }}" as="l" hint-placeholder-count="5"><span style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:2px;background:{{ l.color }}"></span>{{ l.name }}</span></sc-for>
+              </div>
+            </div>
+
+            <div style="background:#fff;border:1px solid #E2DFD8;border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;gap:14px;flex:2 1 560px;min-width:0">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+                <div style="display:flex;align-items:center;gap:8px"><span style="font-size:10px;font-weight:600;letter-spacing:0.08em;padding:3px 6px;border-radius:4px;background:#E6E8FA;color:#2F3C9E">AI</span><div style="font-size:14px;font-weight:600">Why this customer is at risk</div></div>
+                <sc-if value="{{ showFeedback }}" hint-placeholder-val="{{ true }}">
+                  <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:#6A6E78">
+                    <span>{{ fbLabel }}</span>
+                    <button onClick="{{ fbUp }}" style="border:1px solid #D6D2CA;background:{{ fbUpBg }};border-radius:6px;height:28px;padding:0 10px;font-size:12px;cursor:pointer">Useful</button>
+                    <button onClick="{{ fbDown }}" style="border:1px solid #D6D2CA;background:{{ fbDownBg }};border-radius:6px;height:28px;padding:0 10px;font-size:12px;cursor:pointer">Not right</button>
+                  </div>
+                </sc-if>
+              </div>
+              <div style="font-size:14px;line-height:1.55;color:#2A2D33;text-wrap:pretty;max-width:760px">{{ op.summary }}</div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <sc-for list="{{ op.drivers }}" as="d" hint-placeholder-count="4">
+                  <div style="display:grid;grid-template-columns:minmax(0,1fr) 160px 64px;gap:12px;align-items:center;font-size:13px">
+                    <div>{{ d.text }}</div>
+                    <div style="height:6px;background:#EEEBE5;border-radius:3px;overflow:hidden"><div style="height:100%;width:{{ d.w }};background:{{ d.bg }}"></div></div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;text-align:right;color:#6A6E78">{{ d.impact }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isLine }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div style="background:#fff;border:1px solid #E2DFD8;border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px"><div style="font-size:14px;font-weight:600">Product lines · {{ op.name }}</div><div style="font-size:12px;color:#6A6E78">Click a line to analyse</div></div>
+            <div style="overflow-x:auto">
+              <div style="display:grid;grid-template-columns:minmax(160px,1.4fr) 100px 100px 110px minmax(120px,1fr) 110px 110px;font-size:13px;min-width:820px">
+                <sc-for list="{{ lineHead }}" as="h" hint-placeholder-count="7"><div style="padding:8px;font-size:11px;font-weight:600;color:#6A6E78;text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid #E2DFD8;text-align:{{ h.align }}">{{ h.label }}</div></sc-for>
+              </div>
+              <sc-for list="{{ lineRows }}" as="l" hint-placeholder-count="5">
+                <div onClick="{{ l.pick }}" style="display:grid;grid-template-columns:minmax(160px,1.4fr) 100px 100px 110px minmax(120px,1fr) 110px 110px;font-size:13px;min-width:820px;cursor:pointer;border-bottom:1px solid #EEEBE5;align-items:center;background:{{ l.rowBg }}" style-hover="background:#F8F6F2">
+                  <div style="padding:10px 8px;display:flex;align-items:center;gap:8px;font-weight:500"><span style="width:10px;height:10px;border-radius:2px;background:{{ l.color }}"></span>{{ l.name }}</div>
+                  <div style="padding:10px 8px"><span style="font-size:11px;font-weight:600;padding:3px 8px;border-radius:10px;background:{{ l.statusBg }};color:{{ l.statusInk }}">{{ l.status }}</span></div>
+                  <div style="padding:10px 8px;text-align:right;font-family:'IBM Plex Mono',monospace">{{ l.qtyFmt }}</div>
+                  <div style="padding:10px 8px;text-align:right;font-family:'IBM Plex Mono',monospace">{{ l.revFmt }}</div>
+                  <div style="padding:10px 8px;display:flex;align-items:center;gap:8px"><div style="flex:1;height:6px;background:#EEEBE5;border-radius:3px;overflow:hidden"><div style="height:100%;width:{{ l.shareW }};background:{{ l.color }}"></div></div><span style="font-family:'IBM Plex Mono',monospace;width:36px;text-align:right">{{ l.shareFmt }}</span></div>
+                  <div style="padding:10px 8px;text-align:right;font-family:'IBM Plex Mono',monospace;color:{{ l.trendColor }}">{{ l.trendFmt }}</div>
+                  <div style="padding:10px 8px;text-align:right;font-family:'IBM Plex Mono',monospace;color:{{ l.priceColor }}">{{ l.priceFmt }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-wrap:wrap;gap:16px">
+            <div style="background:#fff;border:1px solid #E2DFD8;border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;gap:14px;flex:2 1 520px;min-width:0">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px"><div style="font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:2px;background:{{ line.color }}"></span>{{ line.name }} · 12-month volume</div><div style="font-size:12px;color:#6A6E78;font-family:'IBM Plex Mono',monospace">units / month · {{ line.trendFmt }} vs prior 3 mo</div></div>
+              <div style="display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:6px;height:170px;align-items:end">
+                <sc-for list="{{ line.vol }}" as="b" hint-placeholder-count="12">
+                  <div style="display:flex;flex-direction:column;justify-content:flex-end;height:100%;gap:4px;align-items:center">
+                    <div style="font-size:10px;color:#6A6E78;font-family:'IBM Plex Mono',monospace">{{ b.v }}</div>
+                    <div style="width:100%;height:{{ b.h }};background:{{ b.bg }};border-radius:3px 3px 0 0"></div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:6px;font-size:11px;color:#6A6E78;text-align:center;font-family:'IBM Plex Mono',monospace">
+                <sc-for list="{{ line.vol }}" as="b" hint-placeholder-count="12"><div>{{ b.m }}</div></sc-for>
+              </div>
+            </div>
+            <div style="background:#fff;border:1px solid #E2DFD8;border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;gap:12px;flex:1 1 320px;min-width:0">
+              <div style="font-size:14px;font-weight:600">Avg price trend</div>
+              <div style="position:relative;height:150px">
+                <svg viewBox="0 0 300 120" preserveAspectRatio="none" style="width:100%;height:100%;display:block">
+                  <line x1="0" y1="115" x2="300" y2="115" stroke="#E2DFD8" stroke-width="1" vector-effect="non-scaling-stroke"></line>
+                  <polyline points="{{ line.pc.list }}" fill="none" stroke="#9AA0AC" stroke-width="1.5" stroke-dasharray="4 4" vector-effect="non-scaling-stroke"></polyline>
+                  <polyline points="{{ line.pc.peer }}" fill="none" stroke="#2E8A6E" stroke-width="1.5" vector-effect="non-scaling-stroke"></polyline>
+                  <polyline points="{{ line.pc.agr }}" fill="none" stroke="#1B1D22" stroke-width="2.5" vector-effect="non-scaling-stroke"></polyline>
+                </svg>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(12,minmax(0,1fr));font-size:10px;color:#6A6E78;text-align:center;font-family:'IBM Plex Mono',monospace">
+                <sc-for list="{{ line.vol }}" as="b" hint-placeholder-count="12"><div>{{ b.m1 }}</div></sc-for>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px;font-size:12px">
+                <div style="display:flex;justify-content:space-between"><span style="display:flex;align-items:center;gap:6px"><span style="width:14px;height:3px;background:#1B1D22"></span>Agreement price</span><span style="font-family:'IBM Plex Mono',monospace">{{ line.pc.agrNow }}</span></div>
+                <div style="display:flex;justify-content:space-between"><span style="display:flex;align-items:center;gap:6px"><span style="width:14px;height:2px;background:#2E8A6E"></span>Peer avg (other operators)</span><span style="font-family:'IBM Plex Mono',monospace">{{ line.pc.peerNow }}</span></div>
+                <div style="display:flex;justify-content:space-between"><span style="display:flex;align-items:center;gap:6px"><span style="width:14px;height:0;border-top:2px dashed #9AA0AC"></span>List price</span><span style="font-family:'IBM Plex Mono',monospace">{{ line.pc.listNow }}</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div style="background:#fff;border:1px solid #E2DFD8;border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;align-items:center;gap:8px"><span style="font-size:10px;font-weight:600;letter-spacing:0.08em;padding:3px 6px;border-radius:4px;background:#E6E8FA;color:#2F3C9E">AI</span><div style="font-size:14px;font-weight:600">{{ line.name }} insight</div></div>
+            <div style="font-size:14px;line-height:1.55;color:#2A2D33;text-wrap:pretty;max-width:820px">{{ line.note }}</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px">
+              <sc-for list="{{ line.products }}" as="p" hint-placeholder-count="2">
+                <div style="border:1px solid #E2DFD8;border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:8px;background:#FBFAF8">
+                  <div style="font-weight:600;font-size:13px">{{ p.name }}</div>
+                  <div style="display:flex;gap:16px;font-size:12px;color:#6A6E78;font-family:'IBM Plex Mono',monospace;flex-wrap:wrap"><span>{{ p.qtyFmt }} units</span><span>{{ p.priceFmt }}</span><span style="color:{{ p.trendColor }}">{{ p.trendFmt }}</span></div>
+                  <button onClick="{{ p.open }}" style="align-self:flex-start;border:none;background:none;padding:0;font-size:12px;font-weight:600;color:#4A5BD4;cursor:pointer">Open product →</button>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isProduct }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div style="background:#fff;border:1px solid #E2DFD8;border-radius:10px;padding:20px 22px;display:flex;flex-direction:column;gap:16px">
+            <div>
+              <div style="font-size:11px;font-weight:600;color:#6A6E78;text-transform:uppercase;letter-spacing:0.06em">{{ line.name }}</div>
+              <div style="font-size:24px;font-weight:600;letter-spacing:-0.015em;margin-top:4px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">{{ prod.name }}<span style="font-size:11px;font-weight:600;padding:3px 8px;border-radius:10px;background:{{ prod.statusBg }};color:{{ prod.statusInk }}">{{ prod.status }}</span></div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px">
+              <sc-for list="{{ prod.kpis }}" as="k" hint-placeholder-count="6">
+                <div style="border-left:1px solid #E2DFD8;padding-left:12px"><div style="font-size:12px;color:#6A6E78">{{ k.label }}</div><div style="font-size:22px;font-weight:600;font-family:'IBM Plex Mono',monospace;color:{{ k.color }}">{{ k.v }}</div><div style="font-size:11px;color:#6A6E78">{{ k.sub }}</div></div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-wrap:wrap;gap:16px">
+            <div style="background:#fff;border:1px solid #E2DFD8;border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;gap:14px;flex:2 1 520px;min-width:0">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px"><div style="font-size:14px;font-weight:600">12-month volume</div><div style="font-size:12px;color:#6A6E78;font-family:'IBM Plex Mono',monospace">units / month · {{ prod.trendFmt }} vs prior 3 mo</div></div>
+              <div style="display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:6px;height:170px;align-items:end">
+                <sc-for list="{{ prod.vol }}" as="b" hint-placeholder-count="12">
+                  <div style="display:flex;flex-direction:column;justify-content:flex-end;height:100%;gap:4px;align-items:center">
+                    <div style="font-size:10px;color:#6A6E78;font-family:'IBM Plex Mono',monospace">{{ b.v }}</div>
+                    <div style="width:100%;height:{{ b.h }};background:{{ b.bg }};border-radius:3px 3px 0 0"></div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:6px;font-size:11px;color:#6A6E78;text-align:center;font-family:'IBM Plex Mono',monospace">
+                <sc-for list="{{ prod.vol }}" as="b" hint-placeholder-count="12"><div>{{ b.m }}</div></sc-for>
+              </div>
+            </div>
+            <div style="background:#fff;border:1px solid #E2DFD8;border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;gap:12px;flex:1 1 320px;min-width:0">
+              <div style="font-size:14px;font-weight:600">Price trend</div>
+              <div style="position:relative;height:150px">
+                <svg viewBox="0 0 300 120" preserveAspectRatio="none" style="width:100%;height:100%;display:block">
+                  <line x1="0" y1="115" x2="300" y2="115" stroke="#E2DFD8" stroke-width="1" vector-effect="non-scaling-stroke"></line>
+                  <polyline points="{{ prod.pc.list }}" fill="none" stroke="#9AA0AC" stroke-width="1.5" stroke-dasharray="4 4" vector-effect="non-scaling-stroke"></polyline>
+                  <polyline points="{{ prod.pc.peer }}" fill="none" stroke="#2E8A6E" stroke-width="1.5" vector-effect="non-scaling-stroke"></polyline>
+                  <polyline points="{{ prod.pc.agr }}" fill="none" stroke="#1B1D22" stroke-width="2.5" vector-effect="non-scaling-stroke"></polyline>
+                </svg>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(12,minmax(0,1fr));font-size:10px;color:#6A6E78;text-align:center;font-family:'IBM Plex Mono',monospace">
+                <sc-for list="{{ prod.vol }}" as="b" hint-placeholder-count="12"><div>{{ b.m1 }}</div></sc-for>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px;font-size:12px">
+                <div style="display:flex;justify-content:space-between"><span style="display:flex;align-items:center;gap:6px"><span style="width:14px;height:3px;background:#1B1D22"></span>Agreement price</span><span style="font-family:'IBM Plex Mono',monospace">{{ prod.pc.agrNow }}</span></div>
+                <div style="display:flex;justify-content:space-between"><span style="display:flex;align-items:center;gap:6px"><span style="width:14px;height:2px;background:#2E8A6E"></span>Peer avg (other operators)</span><span style="font-family:'IBM Plex Mono',monospace">{{ prod.pc.peerNow }}</span></div>
+                <div style="display:flex;justify-content:space-between"><span style="display:flex;align-items:center;gap:6px"><span style="width:14px;height:0;border-top:2px dashed #9AA0AC"></span>List price (1.25 × max)</span><span style="font-family:'IBM Plex Mono',monospace">{{ prod.pc.listNow }}</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div style="background:#fff;border:1px solid #E2DFD8;border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;align-items:center;gap:8px"><span style="font-size:10px;font-weight:600;letter-spacing:0.08em;padding:3px 6px;border-radius:4px;background:#E6E8FA;color:#2F3C9E">AI</span><div style="font-size:14px;font-weight:600">Product insight</div></div>
+            <div style="font-size:14px;line-height:1.55;color:#2A2D33;text-wrap:pretty;max-width:820px">{{ prod.note }}</div>
+          </div>
+
+          <div style="background:#fff;border:1px solid #E2DFD8;border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px"><div style="font-size:14px;font-weight:600">All products · {{ op.name }}</div><div style="font-size:12px;color:#6A6E78">Click a product to analyse</div></div>
+            <div style="overflow-x:auto">
+              <div style="display:grid;grid-template-columns:minmax(120px,1fr) minmax(200px,1.6fr) 100px 110px 100px 110px 100px;font-size:13px;min-width:860px">
+                <sc-for list="{{ prodHead }}" as="h" hint-placeholder-count="7"><div style="padding:8px;font-size:11px;font-weight:600;color:#6A6E78;text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid #E2DFD8;text-align:{{ h.align }}">{{ h.label }}</div></sc-for>
+              </div>
+              <sc-for list="{{ prodRows }}" as="p" hint-placeholder-count="8">
+                <div onClick="{{ p.pick }}" style="display:grid;grid-template-columns:minmax(120px,1fr) minmax(200px,1.6fr) 100px 110px 100px 110px 100px;font-size:13px;min-width:860px;cursor:pointer;border-bottom:1px solid #EEEBE5;align-items:center;background:{{ p.rowBg }}" style-hover="background:#F8F6F2">
+                  <div style="padding:9px 8px;display:flex;align-items:center;gap:8px;color:#454850"><span style="width:8px;height:8px;border-radius:2px;background:{{ p.lineColor }}"></span>{{ p.line }}</div>
+                  <div style="padding:9px 8px;font-weight:500">{{ p.name }}</div>
+                  <div style="padding:9px 8px;text-align:right;font-family:'IBM Plex Mono',monospace">{{ p.qtyFmt }}</div>
+                  <div style="padding:9px 8px;text-align:right;font-family:'IBM Plex Mono',monospace">{{ p.priceFmt }}</div>
+                  <div style="padding:9px 8px;text-align:right;font-family:'IBM Plex Mono',monospace">{{ p.discFmt }}</div>
+                  <div style="padding:9px 8px;text-align:right;font-family:'IBM Plex Mono',monospace;color:{{ p.trendColor }}">{{ p.trendFmt }}</div>
+                  <div style="padding:9px 8px;font-size:12px;color:#6A6E78">{{ p.last }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+  </sc-if>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;highThreshold&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:85,&quot;min&quot;:60,&quot;max&quot;:95,&quot;step&quot;:1,&quot;unit&quot;:&quot;%&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Risk tiers&quot;},&quot;mediumThreshold&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:75,&quot;min&quot;:40,&quot;max&quot;:90,&quot;step&quot;:1,&quot;unit&quot;:&quot;%&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Risk tiers&quot;},&quot;showFeedback&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;AI&quot;}}">
+const C = { high: '#D9492F', medium: '#D69A1E', low: '#2E8A6E' };
+const TIER = {
+  high: { label: 'High churn', color: C.high, bg: '#FBE1DB', ink: '#8E2A18', text: '#B63A24' },
+  medium: { label: 'Medium', color: C.medium, bg: '#F8EAC6', ink: '#7A5406', text: '#9A6A0A' },
+  low: { label: 'Low churn', color: C.low, bg: '#D5EDE4', ink: '#1C5E4A', text: '#2E8A6E' },
+};
+const STATUS = { Active: ['#D5EDE4', '#1C5E4A'], Declining: ['#F8EAC6', '#7A5406'], Stopped: ['#FBE1DB', '#8E2A18'] };
+const SEG_SHADE = { S: '#5B6A8C', M: '#9AA6C2', L: '#CBD2E2' };
+const INS = { high: { S: 800, M: 150, L: 50 }, medium: { S: 6000, M: 800, L: 200 }, low: { S: 9000, M: 2000, L: 1000 } };
+const MOVE = { high: { cur: 1000, last: 1100, same: 800, nw: 300 }, medium: { cur: 7000, last: 8000, same: 5000, nw: 3000 }, low: { cur: 12000, last: 16000, same: 10000, nw: 3000 } };
+const CARRY = { high: { S: 250, M: 45, L: 5, nw: 300 }, medium: { S: 2750, M: 200, L: 50, nw: 3000 }, low: { S: null, M: null, L: null, nw: 3000 } };
+const LOST = { S: 200, M: 40, L: 10 };
+const REV = { cur: [6, 19, 32], last: [5, 19.5, 30.8] };
+const SEG_REV = { S: 0.24, M: 0.33, L: 0.43 };
+const MONTHS = ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'];
+const monthYr = i => MONTHS[i] + (i < 3 ? ' 2025' : ' 2026');
+const CATALOG = {
+  'Poultry': ['Chicken breast IQF 40lb', 'Chicken wings 1&2 jt 40lb', 'Turkey breast deli 2×9lb', 'Chicken tenders breaded 20lb'],
+  'Beef & pork': ['Ground beef 80/20 10lb', 'Ribeye steak 12oz', 'Pulled pork cooked 2×5lb', 'Bacon slab 15lb'],
+  'Seafood': ['Atlantic salmon fillet 10lb', 'Shrimp 16/20 P&D 5lb', 'Oysters shucked 1gal', 'Cod loin 10lb'],
+  'Dairy & eggs': ['Shredded mozzarella 5lb', 'Heavy cream 1qt', 'Liquid eggs 20lb', 'Greek yogurt 32oz', 'Butter solids 36lb'],
+  'Produce': ['Romaine hearts 48ct', 'Yellow onions 50lb', 'Avocados Hass 48ct', 'Limes 200ct', 'Mixed greens 3lb'],
+  'Bakery': ['Brioche buns 4" 72ct', 'Pizza dough balls 14oz', 'Sandwich bread wheat', 'Flour tortillas 12" 72ct'],
+  'Dry & canned': ['Penne rigate 20lb', 'Canola oil 35lb', 'Diced tomatoes #10', 'Long grain rice 50lb', 'Black beans #10'],
+  'Frozen': ['Fries 3/8" 6×5lb', 'Mixed vegetables 12×2.5lb', 'Ice cream vanilla 3gal', 'Frozen pizza 16" 12ct'],
+  'Beverages': ['Cold brew concentrate 2.5gal', 'Lemonade base 5gal', 'Orange juice 12×1qt', 'Bottled water 24ct'],
+  'Disposables': ['9" hinged container 200ct', 'Nitrile gloves L 1000ct', '16oz hot cup 1000ct', 'Deli wrap 12" 1000ct'],
+  'Janitorial': ['Sanitizer quat 4×1gal', 'Degreaser 4×1gal', 'Trash liners 55gal 100ct'],
+  'Nutrition': ['Thickened water 48×4oz', 'Protein shake 27×8oz', 'Puréed meals 12ct'],
+};
+const LINE_NAMES = Object.keys(CATALOG);
+const LINE_C = ['#3E4A7A', '#5F72B0', '#2E6F8E', '#8FA0D0', '#6E9A5B', '#C9A36A', '#A3977F', '#7FB3C8', '#B07A5F', '#9AA0AC', '#6B5F8E', '#C2B6A0'];
+const TYPE_LINES = {
+  'Casual Dining': ['Beef & pork', 'Seafood', 'Produce', 'Dairy & eggs', 'Bakery', 'Beverages', 'Poultry', 'Dry & canned'],
+  'Healthcare': ['Nutrition', 'Dairy & eggs', 'Poultry', 'Produce', 'Janitorial', 'Dry & canned', 'Disposables', 'Frozen'],
+  'QSR': ['Poultry', 'Beef & pork', 'Bakery', 'Frozen', 'Disposables', 'Beverages', 'Produce'],
+  'Education': ['Frozen', 'Poultry', 'Dairy & eggs', 'Bakery', 'Dry & canned', 'Disposables', 'Produce', 'Beverages'],
+  'Lodging': ['Dairy & eggs', 'Bakery', 'Beverages', 'Produce', 'Janitorial', 'Seafood', 'Beef & pork'],
+};
+const shuffle = (arr, rnd) => { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const OPS = [
+  ['OP-10482', 'Harborview Bistro Group', 'M', 'AGR-2291', 'Casual Dining', 412000, 0.93, 11, 48, 14, 2, 5],
+  ['OP-20917', 'Pinecrest Senior Living', 'L', 'AGR-1107', 'Healthcare', 1260000, 0.89, 6, 31, 9, 3, 6],
+  ['OP-31544', 'Blue Mesa Taqueria', 'S', 'AGR-3302', 'QSR', 86000, 0.91, 14, 39, 12, 1, 4],
+  ['OP-11820', 'Northfield School District', 'L', 'AGR-0875', 'Education', 980000, 0.86, 3, 22, 7, 4, 6],
+  ['OP-40233', 'Copper Kettle Diners', 'M', 'AGR-2291', 'Casual Dining', 305000, 0.82, 5, 18, 10, 3, 5],
+  ['OP-22719', 'Lakeside Inn & Suites', 'M', 'AGR-4410', 'Lodging', 268000, 0.79, -2, 16, 11, 3, 4],
+  ['OP-35061', 'Fresh Fork Kitchen', 'S', 'AGR-3302', 'QSR', 64000, 0.77, 4, 15, 9, 2, 3],
+  ['OP-18840', 'St. Brigid Medical Center', 'L', 'AGR-1107', 'Healthcare', 1540000, 0.71, -3, 8, 6, 6, 6],
+  ['OP-29374', 'Tidewater Oyster Bar', 'S', 'AGR-2291', 'Casual Dining', 72000, 0.64, -6, 9, 8, 3, 4],
+  ['OP-47102', 'Riverside University Dining', 'L', 'AGR-0875', 'Education', 2110000, 0.42, -4, 4, 5, 6, 6],
+  ['OP-13390', 'Golden Crust Pizzeria', 'S', 'AGR-3302', 'QSR', 58000, 0.37, 1, 6, 7, 4, 4],
+  ['OP-26655', 'Summit Ridge Resort', 'M', 'AGR-4410', 'Lodging', 390000, 0.18, -2, 5, 7, 5, 5],
+];
+const fmtK = n => n == null ? '—' : n >= 1000 ? (n / 1000).toFixed(n % 1000 === 0 ? 0 : 1) + 'K' : String(n);
+const fmtM = n => '$' + (n % 1 === 0 ? n : n.toFixed(1)) + 'M';
+const fmtRev = n => n >= 1e6 ? '$' + (n / 1e6).toFixed(2) + 'M' : n >= 1000 ? '$' + Math.round(n / 1000) + 'K' : '$' + Math.round(n);
+const fmtU = n => n >= 10000 ? (n / 1000).toFixed(1) + 'k' : Math.round(n).toLocaleString();
+const pct = (v, d = 0) => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v * 100).toFixed(d) + '%';
+const sum = a => a.reduce((x, y) => x + y, 0);
+const seeded = s => () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
+const trend3 = q => { const a = sum(q.slice(9)), b = sum(q.slice(6, 9)); return b ? a / b - 1 : 0; };
+const trendColor = v => v < -0.1 ? TIER.high.text : v > 0.02 ? TIER.low.text : '#6A6E78';
+
+function bars(q, color) {
+  const mx = Math.max(1, ...q);
+  return q.map((v, i) => ({ v: v ? fmtU(v) : '', h: Math.max(v ? 2 : 0, v / mx * 82) + '%', m: MONTHS[i], m1: MONTHS[i][0], bg: i >= 9 ? color : '#C5CAD6' }));
+}
+function priceChart(agr, list, peer) {
+  const vals = [...agr.filter(v => v != null), ...list, ...peer];
+  const mn = Math.min(...vals) * 0.97, mx = Math.max(...vals) * 1.01;
+  const pt = (v, i) => `${((i + 0.5) / 12 * 300).toFixed(1)},${(112 - (v - mn) / (mx - mn) * 104).toFixed(1)}`;
+  const line = a => a.map((v, i) => v == null ? null : pt(v, i)).filter(Boolean).join(' ');
+  const lastAgr = [...agr].reverse().find(v => v != null);
+  return { agr: line(agr), list: line(list), peer: line(peer), agrNow: '$' + lastAgr.toFixed(2), listNow: '$' + list[11].toFixed(2), peerNow: '$' + peer[11].toFixed(2) };
+}
+
+class Component extends DCLogic {
+  state = { view: 'overview', seg: 'All', agreement: 'All agreements', search: '', month: 'Sep 2026', opId: OPS[0][0], lineIdx: 0, prodIdx: 0, fb: {} };
+
+  tierOf(p) {
+    const hi = (this.props.highThreshold ?? 85) / 100, md = (this.props.mediumThreshold ?? 75) / 100;
+    return p > hi ? 'high' : p >= md ? 'medium' : 'low';
+  }
+  segVal(tier, table) {
+    const s = this.state.seg; const tot = INS[tier].S + INS[tier].M + INS[tier].L;
+    return s === 'All' ? table : Object.fromEntries(Object.entries(table).map(([k, v]) => [k, v == null ? v : Math.round(v * INS[tier][s] / tot)]));
+  }
+  buildOp(o) {
+    const [id, name, seg, agr, agrType, rev, prob, pd, daysSince, avgInterval, linesNow, linesPeak] = o;
+    const tier = this.tierOf(prob), T = TIER[tier], rnd = seeded(id.charCodeAt(3) * 131 + rev % 997);
+    const base = rev / 3 / 42;
+    const opF = MONTHS.map((m, i) => Math.max(0.12, 1 - Math.max(0, i - 6) / 5 * Math.max(0, prob - 0.35) * 1.3));
+    const priceUp = tier === 'low' ? 1 : 2 + prob * 7;
+    const chosen = shuffle(TYPE_LINES[agrType], rnd).slice(0, linesPeak);
+    const sumW = sum(chosen.map((_, li) => linesPeak - li));
+    const lineData = chosen.map((ln, li) => {
+      const stop = li < linesNow ? 99 : 7 + ((li - linesNow) % 3) * 2;
+      const w = (linesPeak - li) / sumW;
+      const nProd = 1 + Math.floor(rnd() * Math.min(3, CATALOG[ln].length));
+      const picks = shuffle(CATALOG[ln], rnd).slice(0, nProd);
+      const splits = picks.map(() => 0.4 + rnd()); const sSum = sum(splits);
+      const products = picks.map((pn, pi) => {
+        const split = splits[pi] / sSum, p0 = 18 + rnd() * 90;
+        const qty = MONTHS.map((m, i) => i >= stop ? 0 : Math.round(base * w * split * opF[i] * (0.85 + rnd() * 0.3)));
+        const price = MONTHS.map((m, i) => +(p0 * (1 + (i >= 6 ? priceUp / 100 * (i - 5) / 6 : 0) + (rnd() - 0.5) * 0.02)).toFixed(2));
+        const agrP = price.map((v, i) => i >= stop ? null : v);
+        const list = MONTHS.map(() => +(1.25 * Math.max(...price)).toFixed(2));
+        const peer = MONTHS.map((m, i) => +(p0 * (0.975 + (i >= 6 ? 0.004 * (i - 5) : 0))).toFixed(2));
+        const lastIdx = qty.reduce((a, v, i) => v > 0 ? i : a, -1);
+        const cur = price[Math.max(0, lastIdx)];
+        const tr = trend3(qty);
+        return { name: pn, qty, price, agrP, list, peer, lastIdx, cur, tr, stopped: stop < 99, stop,
+          qty12: sum(qty), rev12: sum(qty.map((q, i) => q * price[i])), claim12: sum(qty.map((q, i) => q * (list[i] - price[i]))),
+          disc: (list[11] - cur) / list[11], vsPeer: cur / peer[11] - 1, priceChg: cur / price[5] - 1,
+          last: lastIdx === 11 ? Math.max(1, Math.round(daysSince * (0.6 + rnd() * 0.5))) + 'd ago' : monthYr(lastIdx) };
+      });
+      const qty = MONTHS.map((m, i) => sum(products.map(p => p.qty[i])));
+      const rev12 = sum(products.map(p => p.rev12)), tr = trend3(qty);
+      const agrP = MONTHS.map((m, i) => { const q = qty[i]; return q ? sum(products.map(p => p.qty[i] * p.price[i])) / q : null; });
+      const avg = k => MONTHS.map((m, i) => sum(products.map(p => p[k][i])) / products.length);
+      const status = stop < 99 ? 'Stopped' : tr < -0.15 ? 'Declining' : 'Active';
+      const priceChg = sum(products.map(p => p.priceChg)) / products.length;
+      return { name: ln, idx: li, color: LINE_C[LINE_NAMES.indexOf(ln)], products, qty, rev12, qty12: sum(qty), tr, agrP, list: avg('list'), peer: avg('peer'), status, stop, priceChg };
+    });
+    const volRaw = MONTHS.map((m, i) => sum(lineData.map(l => l.qty[i])));
+    const opRev12 = sum(lineData.map(l => l.rev12));
+    const volChange = Math.round(trend3(volRaw) * 100);
+    const lines = MONTHS.map((m, i) => {
+      const act = lineData.filter(l => l.qty[i] > 0).reverse();
+      return { m: m[0], cells: act.map(l => ({ bg: l.color })) };
+    });
+    const ratio = daysSince / avgInterval;
+    const drv = tier === 'low'
+      ? [['Orders are steady month to month', 0.34], ['Reorders on its usual schedule', 0.26], [`Still buys across ${linesNow} product lines`, 0.22], ['Pays a fair price compared with similar customers', 0.12]]
+      : [[`Ordering ${Math.abs(volChange)}% less than last quarter`, 0.38], [`Their price went up ${priceUp.toFixed(1)}% since March`, 0.27], [`No order in ${daysSince} days — usually orders every ${avgInterval} days`, 0.21], [`Stopped buying ${linesPeak - linesNow} of ${linesPeak} product lines`, 0.14]].filter(d => !/Stopped buying 0 /.test(d[0]));
+    const summary = tier === 'low'
+      ? `${name} is a healthy account. It keeps ordering the same amounts, on its usual schedule, across the same product lines as the last six months. No action needed — keep the relationship as is.`
+      : `${name} is showing clear signs it may stop buying from us, putting about ${fmtRev(rev)} in revenue from the last 90 days at risk. It is ordering ${Math.abs(volChange)}% less than last quarter, its price went up ${priceUp.toFixed(1)}% since March, and it hasn't ordered in ${daysSince} days when it normally orders every ${avgInterval} days.${linesPeak > linesNow ? ` It has also stopped buying ${linesPeak - linesNow} of its ${linesPeak} product lines — customers who do this often move their business to a competitor.` : ''} Suggested next step: have the account manager call this week and review pricing.`;
+    return {
+      id, name, seg, agreementLabel: `${agr} · ${agrType}`, agrType, rev, prob, tier, priceUp,
+      revFmt: fmtRev(rev), probFmt: Math.round(prob * 100) + '%', probW: prob * 100 + '%',
+      dFmt: (pd > 0 ? '+' : '') + pd + ' pts', dColor: pd > 0 ? TIER.high.text : TIER.low.text,
+      tierLabel: T.label, tierColor: T.color, tierBg: T.bg, tierInk: T.ink, tierText: T.text,
+      vol: bars(volRaw, T.color), volChange: (volChange > 0 ? '+' : '') + volChange + '%', lines, linesNow, linesPeak, lineData, opRev12,
+      daysSince, avgInterval, ratioFmt: ratio.toFixed(1) + '×', ratioPos: Math.min(97, ratio / 3 * 100) + '%',
+      ratioColor: ratio > 1.8 ? TIER.high.text : ratio > 1 ? TIER.medium.text : TIER.low.text,
+      ratioNote: ratio > 1.8 ? 'Much later than usual with their next order — the clearest early warning sign.' : ratio > 1 ? 'A little late with their next order.' : 'Ordering on their usual schedule.',
+      summary, drivers: drv.map(([text, w]) => ({ text, w: w / 0.4 * 100 + '%', impact: w >= 0.3 ? 'Major' : w >= 0.2 ? 'Moderate' : 'Minor', bg: T.color })),
+    };
+  }
+
+  renderVals() {
+    const s = this.state, seg = s.seg;
+    const set = p => this.setState(p);
+    const ops = OPS.map(o => this.buildOp(o));
+    const lastMonth = { 'Sep 2026': 'Aug 2026', 'Aug 2026': 'Jul 2026', 'Jul 2026': 'Jun 2026' }[s.month];
+    const segShareOps = t => seg === 'All' ? 1 : INS[t][seg] / (INS[t].S + INS[t].M + INS[t].L);
+    const opsCur = seg === 'All' ? 20000 : ['high', 'medium', 'low'].reduce((a, t) => a + INS[t][seg], 0);
+    const opsLast = Math.round(opsCur * 21 / 20 / 100) * 100;
+    const rs = seg === 'All' ? 1 : SEG_REV[seg];
+    const hi = this.props.highThreshold ?? 85, md = this.props.mediumThreshold ?? 75;
+    const ranges = { high: `>${hi}%`, medium: `${md}–${hi}%`, low: `<${md}%` };
+    const tiers = ['high', 'medium', 'low'].map(t => ({ key: t, label: TIER[t].label, color: TIER[t].color, range: ranges[t] }));
+    const tierCards = tiers.map(t => {
+      const segs = seg === 'All' ? ['S', 'M', 'L'] : [seg];
+      const tot = segs.reduce((a, k) => a + INS[t.key][k], 0);
+      const all = INS[t.key].S + INS[t.key].M + INS[t.key].L;
+      return { ...t, count: fmtK(tot), pct: Math.round(tot / opsCur * 100) + '% of base',
+        split: ['S', 'M', 'L'].map(k => ({ seg: k, v: fmtK(INS[t.key][k]), w: INS[t.key][k] / all * 100 + '%', bg: seg === 'All' || seg === k ? SEG_SHADE[k] : '#E4E1DA' })) };
+    });
+    const moveRows = tiers.map(t => { const m = this.segVal(t.key, MOVE[t.key]); const net = m.cur - m.last;
+      return { label: t.label, color: t.color, cur: fmtK(m.cur), last: fmtK(m.last), same: fmtK(m.same), nw: fmtK(m.nw), net: (net > 0 ? '+' : net < 0 ? '−' : '') + fmtK(Math.abs(net)), netColor: net < 0 ? TIER.low.text : net > 0 ? TIER.high.text : '#6A6E78' }; });
+    const trendRows = tiers.map(t => { const c = CARRY[t.key]; const show = k => seg === 'All' || seg === k ? fmtK(c[k]) : '—';
+      return { label: t.label, color: t.color, S: show('S'), M: show('M'), L: show('L'), nw: fmtK(seg === 'All' ? c.nw : Math.round(c.nw * segShareOps(t.key))) }; });
+    const q = s.search.trim().toLowerCase();
+    const rows = ops.filter(o => (seg === 'All' || o.seg === seg) && (s.agreement === 'All agreements' || o.agrType === s.agreement) && (!q || o.name.toLowerCase().includes(q) || o.id.toLowerCase().includes(q)))
+      .sort((a, b) => b.prob - a.prob).map(o => ({ ...o, open: () => set({ view: 'operator', opId: o.id, lineIdx: 0, prodIdx: 0 }) }));
+
+    const op = ops.find(o => o.id === s.opId) || ops[0];
+    const L = op.lineData[Math.min(s.lineIdx, op.lineData.length - 1)];
+    const P = L.products[Math.min(s.prodIdx, L.products.length - 1)];
+    const T = TIER[op.tier];
+    const lineColorFor = l => l.status === 'Stopped' ? '#C5CAD6' : T.color;
+    const line = {
+      idx: String(L.idx), name: L.name, color: L.color, trendFmt: L.status === 'Stopped' ? 'stopped' : pct(L.tr),
+      vol: bars(L.qty, lineColorFor(L)), pc: priceChart(L.agrP, L.list, L.peer),
+      note: L.status === 'Stopped'
+        ? `${op.name} stopped buying ${L.name.toLowerCase()} after ${monthYr(L.stop - 1)}. Orders were steady until their price went up ${pct(L.priceChg, 1)}, so they have likely switched to another supplier. Suggested next step: ask about it on the next sales call and see if a better price wins it back.`
+        : L.status === 'Declining'
+          ? `${op.name} is buying less ${L.name.toLowerCase()} (${pct(L.tr)} vs last quarter) since its price went up ${pct(L.priceChg, 1)} — it now pays more than similar customers. This line is ${Math.round(L.rev12 / op.opRev12 * 100)}% of the customer's yearly revenue (${fmtRev(L.rev12)}), so a price review here is the best way to keep them.`
+          : `${L.name} orders are steady (${pct(L.tr)} vs last quarter) and make up ${Math.round(L.rev12 / op.opRev12 * 100)}% of the customer's yearly revenue. No action needed.`,
+      products: L.products.map((p, pi) => ({ name: p.name, qtyFmt: fmtU(p.qty12), priceFmt: '$' + p.cur.toFixed(2), trendFmt: p.stopped ? 'stopped' : pct(p.tr), trendColor: p.stopped ? TIER.high.text : trendColor(p.tr), open: () => set({ view: 'product', prodIdx: pi }) })),
+    };
+    const pStatus = P.stopped ? 'Stopped' : P.tr < -0.15 ? 'Declining' : 'Active';
+    const prod = {
+      key: L.idx + ':' + L.products.indexOf(P), name: P.name, status: pStatus, statusBg: STATUS[pStatus][0], statusInk: STATUS[pStatus][1],
+      trendFmt: P.stopped ? 'stopped' : pct(P.tr), vol: bars(P.qty, P.stopped ? '#C5CAD6' : T.color), pc: priceChart(P.agrP, P.list, P.peer),
+      kpis: [
+        { label: 'Qty · 12 mo', v: fmtU(P.qty12), sub: 'units', color: '#1B1D22' },
+        { label: 'Revenue · 12 mo', v: fmtRev(P.rev12), sub: Math.round(P.rev12 / op.opRev12 * 100) + '% of operator', color: '#1B1D22' },
+        { label: 'Agreement price', v: '$' + P.cur.toFixed(2), sub: pct(P.priceChg, 1) + ' since Mar', color: P.priceChg > 0.04 ? TIER.high.text : '#1B1D22' },
+        { label: 'Discount vs list', v: Math.round(P.disc * 100) + '%', sub: 'list $' + P.list[11].toFixed(2), color: '#1B1D22' },
+        { label: 'Price vs peers', v: pct(P.vsPeer, 1), sub: 'peer avg $' + P.peer[11].toFixed(2), color: P.vsPeer > 0.03 ? TIER.high.text : TIER.low.text },
+        { label: 'Claim amount · 12 mo', v: fmtRev(P.claim12), sub: '(list − agreement) × qty', color: '#1B1D22' },
+        { label: 'Last bought', v: P.last, sub: 'ordered ' + P.qty.filter(v => v > 0).length + ' of 12 months', color: '#1B1D22' },
+      ],
+      note: P.stopped
+        ? `${op.name} hasn't ordered ${P.name} since ${monthYr(P.lastIdx)}. Before they stopped, the price had gone up ${pct(P.priceChg, 1)} and they were paying ${pct(P.vsPeer, 1)} compared with similar customers — price is the most likely reason. Suggested next step: offer a price closer to what similar customers pay.`
+        : P.vsPeer > 0.03
+          ? `${op.name} pays ${pct(P.vsPeer, 1)} more for ${P.name} than similar customers, and is ordering ${pct(P.tr)} compared with last quarter. Lowering the price toward what others pay is the best way to protect this product's ${fmtRev(P.rev12)} in yearly revenue.`
+          : `${P.name} is fairly priced compared with similar customers (${pct(P.vsPeer, 1)}), and orders are ${pct(P.tr)} vs last quarter. No action needed.`,
+    };
+    const allProds = [];
+    op.lineData.forEach(l => l.products.forEach((p, pi) => allProds.push({ l, p, pi })));
+    const fb = s.fb[op.id];
+    const setFb = v => set({ fb: { ...s.fb, [op.id]: fb === v ? undefined : v } });
+    const H = (label, align = 'left') => ({ label, align });
+    const pts = [];
+    op.lineData.filter(l => l.status === 'Stopped').forEach(l => pts.push(`Ask why they stopped ordering ${l.name.toLowerCase()} after ${monthYr(l.stop - 1)} — likely moved to another supplier.`));
+    op.lineData.filter(l => l.status === 'Declining').forEach(l => pts.push(`${l.name} orders are ${pct(l.tr)} vs last quarter after a ${pct(l.priceChg, 1)} price change — open a price review (${fmtRev(l.rev12)} a year).`));
+    allProds.filter(({ p }) => !p.stopped && p.vsPeer > 0.03).sort((a, b) => b.p.rev12 - a.p.rev12).slice(0, 3).forEach(({ p }) => pts.push(`${p.name}: they pay ${pct(p.vsPeer, 1)} more than similar customers — consider matching.`));
+    if (op.daysSince / op.avgInterval > 1) pts.push(`Confirm their next order — it has been ${op.daysSince} days, they usually order every ${op.avgInterval} days.`);
+    if (!pts.length) pts.push('Thank them for their business and check if anything has changed.', 'Look for product lines similar customers buy that they don’t yet.');
+    const briefPoints = pts.slice(0, 6).map((text, i) => ({ n: String(i + 1), text }));
+    const briefText = [`SALES CALL BRIEF — ${op.name} (${op.id})`, `${op.tierLabel} · Revenue at risk (90d) ${op.revFmt} · ${op.agreementLabel}`, '', op.summary, '', 'Talking points:', ...briefPoints.map(p => `${p.n}. ${p.text}`)].join('\n');
+    const csv = (name, data) => {
+      const esc = v => { const t = String(v ?? ''); return /[",\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
+      const blob = new Blob(['\ufeff' + data.map(r => r.map(esc).join(',')).join('\n')], { type: 'text/csv;charset=utf-8' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    };
+    const TABS = [['overview', 'Overview'], ['operator', 'Operator'], ['line', 'Operator · Product line'], ['product', 'Operator · Product']];
+    return {
+      month: s.month, lastMonth,
+      tabs: TABS.map(([k, label]) => ({ label, go: () => set({ view: k }), color: s.view === k ? '#FFFFFF' : '#A9ACB4', border: s.view === k ? '#D9492F' : 'transparent' })),
+      isOverview: s.view === 'overview', isDrill: s.view !== 'overview',
+      isOperator: s.view === 'operator', isLine: s.view === 'line', isProduct: s.view === 'product',
+      search: s.search, onSearch: e => set({ search: e.target.value }),
+      agreement: s.agreement, agreementOpts: ['All agreements', 'Casual Dining', 'Healthcare', 'Education', 'QSR', 'Lodging'], onAgreement: e => set({ agreement: e.target.value }),
+      onMonth: e => set({ month: e.target.value }),
+      segOpts: ['All', 'S', 'M', 'L'].map(k => ({ label: k, pick: () => set({ seg: k }), bg: seg === k ? '#1B1D22' : '#FBFAF8', color: seg === k ? '#FFFFFF' : '#1B1D22' })),
+      tiers, tierCards,
+      kpi: { ops: fmtK(opsCur), opsLast: fmtK(opsLast), opsDelta: '−' + fmtK(opsLast - opsCur),
+        rev: [30, 90, 120].map((d, i) => { const c = REV.cur[i] * rs, l = REV.last[i] * rs, dd = (c / l - 1) * 100;
+          return { label: `Last ${d} days`, cur: fmtM(c), last: fmtM(l), delta: (dd >= 0 ? '+' : '') + dd.toFixed(1) + '%', dColor: dd >= 0 ? TIER.low.text : TIER.high.text }; }) },
+      lost: { total: fmtK(seg === 'All' ? 250 : LOST[seg]), split: ['S', 'M', 'L'].map(k => ({ seg: k, v: LOST[k] })) },
+      moveHead: [H('Tier'), H('Current', 'right'), H('Last mo', 'right'), H('Retained', 'right'), H('New', 'right'), H('Net', 'right')], moveRows,
+      trendHead: [H('Tier'), H('S', 'right'), H('M', 'right'), H('L', 'right'), H('New', 'right')], trendRows,
+      tableHead: [H('Operator'), H('Seg'), H('Price agreement'), H('Revenue 90d', 'right'), H('Churn prob.'), H('Δ vs last', 'right'), H('Tier'), H('')],
+      rows, rowCount: rows.length, noRows: rows.length === 0,
+      op, line, prod,
+      opOpts: ops.map(o => ({ id: o.id, name: o.name })),
+      onPickOp: e => set({ opId: e.target.value, lineIdx: 0, prodIdx: 0 }),
+      lineOpts: op.lineData.map(l => ({ v: String(l.idx), label: l.name })),
+      onPickLine: e => set({ lineIdx: +e.target.value, prodIdx: 0, view: s.view === 'operator' ? 'line' : s.view }),
+      prodOpts: L.products.map((p, pi) => ({ v: L.idx + ':' + pi, label: p.name })),
+      onPickProd: e => set({ prodIdx: +e.target.value.split(':')[1], view: 'product' }),
+      lineHead: [H('Product line'), H('Status'), H('Qty 12 mo', 'right'), H('Revenue 12 mo', 'right'), H('Share of revenue'), H('Qty trend 3 mo', 'right'), H('Price chg 6 mo', 'right')],
+      lineRows: op.lineData.map(l => ({
+        name: l.name, color: l.color, status: l.status, statusBg: STATUS[l.status][0], statusInk: STATUS[l.status][1],
+        qtyFmt: fmtU(l.qty12), revFmt: fmtRev(l.rev12), shareW: l.rev12 / op.opRev12 * 100 + '%', shareFmt: Math.round(l.rev12 / op.opRev12 * 100) + '%',
+        trendFmt: l.status === 'Stopped' ? 'stopped' : pct(l.tr), trendColor: l.status === 'Stopped' ? TIER.high.text : trendColor(l.tr),
+        priceFmt: pct(l.priceChg, 1), priceColor: l.priceChg > 0.04 ? TIER.high.text : '#6A6E78',
+        rowBg: l.idx === L.idx ? '#F1EFEA' : 'transparent', pick: () => set({ lineIdx: l.idx, prodIdx: 0 }),
+      })),
+      prodHead: [H('Product line'), H('Product'), H('Qty 12 mo', 'right'), H('Agreement price', 'right'), H('Discount', 'right'), H('Qty trend 3 mo', 'right'), H('Last bought')],
+      prodRows: allProds.map(({ l, p, pi }) => ({
+        line: l.name, lineColor: l.color, name: p.name, qtyFmt: fmtU(p.qty12), priceFmt: '$' + p.cur.toFixed(2), discFmt: Math.round(p.disc * 100) + '%',
+        trendFmt: p.stopped ? 'stopped' : pct(p.tr), trendColor: p.stopped ? TIER.high.text : trendColor(p.tr), last: p.last,
+        rowBg: l.idx === L.idx && p === P ? '#F1EFEA' : 'transparent', pick: () => set({ lineIdx: l.idx, prodIdx: pi }),
+      })),
+      showFeedback: this.props.showFeedback ?? true,
+      fbLabel: fb === 'up' ? 'Thanks — logged for retraining' : fb === 'down' ? 'Flagged for review' : 'Was this explanation right?',
+      fbUp: () => setFb('up'), fbDown: () => setFb('down'),
+      fbUpBg: fb === 'up' ? '#D5EDE4' : '#FFFFFF', fbDownBg: fb === 'down' ? '#FBE1DB' : '#FFFFFF',
+      exportOps: () => csv(`operators-${s.month.replace(' ', '-')}.csv`, [['Operator ID', 'Operator', 'Segment', 'Price agreement', 'Revenue 90d', 'Risk tier', 'Churn likelihood', 'Change vs last month', 'Why at risk'],
+        ...rows.map(o => [o.id, o.name, o.seg, o.agreementLabel, Math.round(o.rev), o.tierLabel, o.probFmt, o.dFmt, o.summary])]),
+      exportOp: () => csv(`${op.id}-products.csv`, [['Operator', 'Product line', 'Product', 'Status', 'Qty 12 mo', 'Revenue 12 mo', 'Agreement price', 'Discount vs list', 'Price vs similar customers', 'Qty trend 3 mo', 'Last bought'],
+        ...allProds.map(({ l, p }) => [op.name, l.name, p.name, p.stopped ? 'Stopped' : p.tr < -0.15 ? 'Declining' : 'Active', p.qty12, Math.round(p.rev12), p.cur.toFixed(2), Math.round(p.disc * 100) + '%', pct(p.vsPeer, 1), p.stopped ? 'stopped' : pct(p.tr), p.last])]),
+      briefOpen: !!s.brief, openBrief: () => set({ brief: true, copied: false }), closeBrief: () => set({ brief: false }), stop: e => e.stopPropagation(),
+      printBrief: () => window.print(),
+      copyLabel: s.copied ? 'Copied' : 'Copy as text',
+      copyBrief: () => { navigator.clipboard?.writeText(briefText).then(() => set({ copied: true })).catch(() => {}); },
+      brief: { points: briefPoints, date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        head: [H('Line'), H('Status'), H('Revenue 12 mo', 'right'), H('Orders vs last qtr', 'right'), H('Price chg 6 mo', 'right')] },
+    };
+  }
+}
+</script>
+</body>
+</html>
