@@ -1,0 +1,20 @@
+{
+  "version": "0.1.0",
+  "description": "Every filter, defined once. Values travel in the URL and the API under `param`. Filters that depend on optional source fields are switched on by the manufacturer config (`configFlag`) or by a data capability (`requires`).",
+  "filters": [
+    { "id": "f_snapshot", "label": "Snapshot", "param": "snapshot", "tier": "core", "values": "Published snapshot months, newest first", "default": "current", "notes": "Every response states its snapshot; a screen never mixes snapshots." },
+    { "id": "f_band", "label": "Risk band", "param": "band", "tier": "core", "values": ["high", "medium", "low"], "default": ["high", "medium"], "notes": "Bands come from the model's versioned risk policy." },
+    { "id": "f_state", "label": "Data state", "param": "state", "tier": "core", "values": ["scored", "data_incomplete", "dormant", "insufficient_history"], "default": ["scored", "data_incomplete"], "notes": "Dormant operators are excluded from the default queue." },
+    { "id": "f_pattern", "label": "What is happening", "param": "pattern", "tier": "core", "values": ["overall_decline", "dropping_lines", "narrowing_products", "price_led", "reporting_caution"], "default": "all" },
+    { "id": "f_size", "label": "Operator size", "param": "size", "tier": "core", "values": ["S", "M", "L"], "default": "all", "notes": "Size bands from 12-month revenue, method set in config." },
+    { "id": "f_product_line", "label": "Product line", "param": "line", "tier": "core", "values": "Product lines in the manufacturer's hierarchy", "default": "all", "notes": "On the queue: operators whose relationship with this line is flagged." },
+    { "id": "f_territory", "label": "Territory", "param": "territory", "tier": "core", "configFlag": "filters.territory", "values": "Sales territory codes from the claims source", "default": "all" },
+    { "id": "f_owner", "label": "Owner or team", "param": "owner", "tier": "enhanced", "requires": ["account_ownership"], "values": "Owners and teams from the ownership source", "default": "me, when the signed-in user owns accounts; otherwise all" },
+    { "id": "f_segment", "label": "Operator segment", "param": "segment", "tier": "enhanced", "requires": ["operator_segment"], "values": "Segments from the operator master", "default": "all" },
+    { "id": "f_division", "label": "Division", "param": "division", "tier": "core", "configFlag": "filters.division", "values": "Manufacturer division codes", "default": "all", "notes": "Shown only when the manufacturer has more than one division." },
+    { "id": "f_distributor", "label": "Reporting distributor", "param": "distributor", "tier": "core", "configFlag": "filters.distributor", "values": "Distributors that reported claims in the last 3 months", "default": "all", "notes": "Operators with claims via this distributor. A filter for context, not a prediction level." },
+    { "id": "f_review_status", "label": "Review status", "param": "review", "tier": "core", "values": ["unreviewed", "in_review", "reviewed"], "default": "all" },
+    { "id": "f_search", "label": "Find an operator", "param": "q", "tier": "core", "values": "Free text on operator name or ID", "default": "" },
+    { "id": "f_book_grain", "label": "Show", "param": "grain", "tier": "core", "values": ["product_line", "product"], "default": "product_line" }
+  ]
+}

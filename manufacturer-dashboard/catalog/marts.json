@@ -1,0 +1,102 @@
+{
+  "version": "0.1.0",
+  "description": "Serving marts and result tables the API reads. Every metric's source must point at a mart and columns listed here. Marts marked new do not exist in the prototype pipeline yet.",
+  "capabilities": {
+    "list_price": "A real list price per product and period (not the 1.25 x max-price proxy)",
+    "billback_amount": "Actual billback or claim amounts per claim line",
+    "account_ownership": "Account owner and team per operator, with effective dates",
+    "operator_segment": "Operator segment or channel from an operator master, with effective dates",
+    "product_replacement_map": "Which product replaces which, with effective dates",
+    "claim_receipt_timestamp": "When each claim record was first received, so completeness can be measured as known at the cutoff"
+  },
+  "marts": [
+    {
+      "id": "mart_portfolio_snapshot",
+      "grain": "snapshot",
+      "columns": ["monitored_operators", "monitored_operators_prev", "operators_scored", "operators_dormant", "operators_insufficient_history", "operators_data_incomplete", "flagged_operators", "flagged_operators_prev", "exposure_3m", "revenue_1m", "revenue_3m", "revenue_6m", "revenue_1m_ref", "revenue_3m_ref", "revenue_6m_ref", "flagged_lines", "flagged_products", "reviewed_flagged", "snapshot_month", "latest_claim_received", "scored_at", "reporting_completeness_recent"]
+    },
+    {
+      "id": "mart_portfolio_bands",
+      "grain": "snapshot x band x size_band",
+      "columns": ["band", "size_band", "operators", "exposure_3m"]
+    },
+    {
+      "id": "mart_band_transitions",
+      "grain": "operator x snapshot",
+      "new": true,
+      "columns": ["band", "band_prev", "state", "state_prev", "size_band", "transition", "active_this_month", "month_maturity"]
+    },
+    {
+      "id": "mart_portfolio_trend",
+      "grain": "snapshot, last 12",
+      "columns": ["snapshot_month", "flagged_operators", "exposure_3m", "lost_operators"]
+    },
+    {
+      "id": "mart_pattern_mix",
+      "grain": "snapshot x pattern",
+      "columns": ["pattern", "operators", "exposure_3m"]
+    },
+    {
+      "id": "mart_operator_queue",
+      "grain": "operator x snapshot",
+      "columns": ["risk_score", "band", "risk_change", "state", "pattern", "headline_reason", "exposure_3m", "last_active_month", "months_since_last", "owner", "team", "size_band", "territory", "flagged_lines", "total_lines", "flagged_products", "total_products", "highest_risk_line", "revenue_sparkline_12m", "review_status", "review_disposition", "explanation_status"]
+    },
+    {
+      "id": "mart_operator_history",
+      "grain": "operator x month",
+      "columns": ["revenue", "quantity", "activity_records", "active", "lines_active", "agreement_price_index", "discount_rate", "billback_amount", "reporting_completeness", "avg_claim_delay_days"]
+    },
+    {
+      "id": "mart_operator_profile",
+      "grain": "operator x snapshot",
+      "columns": ["revenue_3m", "revenue_prior_3m", "revenue_12m", "active_months_6m", "months_observed_6m", "typical_gap_months", "lines_now", "lines_peak", "products_now", "products_peak", "top_line_share", "lifetime_avg_monthly", "lifetime_peak_monthly", "portfolio_share", "portfolio_rank_pct", "price_change_6m", "agreements"]
+    },
+    {
+      "id": "mart_relationship_risk",
+      "grain": "operator x (product line | product) x snapshot",
+      "columns": ["grain", "risk_score", "band", "risk_change", "state", "status", "revenue_12m", "share_of_operator", "share_of_line", "trend_3v3", "agreement_price_latest", "price_change_6m", "peer_price_avg", "price_vs_peers", "last_active_month", "months_bought_12m", "discount_rate", "billback_12m", "down_line_stable", "replaced_by"]
+    },
+    {
+      "id": "mart_relationship_history",
+      "grain": "operator x (product line | product) x month",
+      "columns": ["revenue", "quantity", "agreement_price", "peer_price_avg", "list_price", "activity_records"]
+    },
+    {
+      "id": "mart_peer_groups",
+      "grain": "operator x snapshot",
+      "new": true,
+      "columns": ["peer_level", "peer_keys", "peer_count", "widened", "thin", "like_for_like_price", "peer_like_for_like_price", "position"]
+    },
+    {
+      "id": "mart_peer_line_stats",
+      "grain": "peer group x product line x snapshot",
+      "new": true,
+      "columns": ["peers_buying", "share_buying", "price_min", "price_max", "price_avg", "price_spread", "avg_quantity_3m"]
+    },
+    {
+      "id": "mart_product_line_book",
+      "grain": "product line x snapshot",
+      "columns": ["operators_buying", "flagged_relationships", "exposure_3m", "volume_trend_3v3", "volume_monthly", "operators_declining", "operators_stopped"]
+    },
+    {
+      "id": "mart_product_book",
+      "grain": "product x snapshot",
+      "columns": ["operators_buying", "flagged_relationships", "operators_stopped", "exposure_3m"]
+    },
+    {
+      "id": "churn_driver_attributions",
+      "grain": "prediction x feature",
+      "columns": ["feature", "business_label", "value", "comparison_value", "attribution", "explained_class", "direction", "strength"]
+    },
+    {
+      "id": "churn_explanations",
+      "grain": "prediction x prompt, schema and model versions",
+      "columns": ["status", "summary", "reasons", "caveats"]
+    },
+    {
+      "id": "mart_model_health",
+      "grain": "model version x snapshot",
+      "columns": ["precision_at_capacity", "recall_at_capacity", "auc", "brier", "prevalence", "flagged_high", "inactive_next", "psi_by_feature", "feed_coverage", "explanation_validity", "cache_hit_rate", "feedback_helpful", "feedback_not_right", "disposition_mix"]
+    }
+  ]
+}

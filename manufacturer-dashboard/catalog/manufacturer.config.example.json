@@ -1,0 +1,53 @@
+{
+  "$comment": "Per-manufacturer configuration. Copy this file per manufacturer; the dashboard and API read it at start-up. Capabilities switch Enhanced metrics and filters on; everything else has a safe default.",
+  "tenant": "example-manufacturer",
+  "displayName": "Example Manufacturer",
+  "currency": "USD",
+  "fiscalYearStartMonth": 1,
+  "activityDatePrecision": "month",
+  "terminology": {
+    "operator": "Operator",
+    "productLine": "Product line",
+    "product": "Product"
+  },
+  "hierarchy": {
+    "$comment": "Source level used as the product line, or null when the source has no grouping above product (hides the Operator · Product line tab).",
+    "lineLevel": "prod_line"
+  },
+  "units": {
+    "mode": "single",
+    "label": "cases"
+  },
+  "sizeBands": {
+    "method": "revenue_terciles",
+    "window": "12m",
+    "labels": ["Small", "Mid", "Large"]
+  },
+  "dormantMonths": 3,
+  "minHistoryMonths": 6,
+  "coveragePolicy": {
+    "minCompleteness": 0.9
+  },
+  "riskPolicy": "rp-2026-09",
+  "reviewCapacityPerMonth": 400,
+  "peerGroup": {
+    "keys": ["size_band", "main_product_line", "territory"],
+    "minPeers": 5
+  },
+  "llm": {
+    "batchTopN": 100
+  },
+  "capabilities": {
+    "list_price": false,
+    "billback_amount": false,
+    "account_ownership": true,
+    "operator_segment": false,
+    "product_replacement_map": false,
+    "claim_receipt_timestamp": false
+  },
+  "filters": {
+    "territory": true,
+    "division": false,
+    "distributor": true
+  }
+}

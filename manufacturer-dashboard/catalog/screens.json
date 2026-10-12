@@ -1,0 +1,98 @@
+{
+  "version": "0.2.0",
+  "description": "The dashboard's five tabs. Each has its question, headline metrics (at most 6), sections in reading order, tab-wide filters, and drill targets. A section can carry its own filters and a sortable table; an action (such as the review brief) is a view opened from a tab. Metric order inside a section is display order.",
+  "screens": [
+    {
+      "id": "overview", "label": "Overview", "role": "viewer",
+      "question": "How big is the problem, is it moving, and which operators come first?",
+      "headline": ["pf_flagged_operators", "pf_revenue_exposure", "pf_monitored_operators", "pf_lost_operators", "pf_review_coverage", "pf_data_freshness"],
+      "sections": [
+        { "title": "Risk bands", "metrics": ["pf_band_size_split"] },
+        { "title": "Movement since last month", "metrics": ["pf_tier_movement", "pf_trending_carryover", "pf_band_transitions"] },
+        {
+          "title": "Operators to review",
+          "metrics": ["op_risk", "op_state", "op_headline_reason", "op_exposure", "op_recency", "op_owner", "op_signal_summary", "op_review_status", "op_reporting"],
+          "filters": ["f_band", "f_state", "f_pattern", "f_product_line", "f_distributor", "f_review_status", "f_search"],
+          "table": {
+            "defaultSort": { "metric": "op_exposure", "direction": "desc" },
+            "sortable": ["op_risk", "op_headline_reason", "op_exposure", "op_recency", "op_owner", "op_review_status"]
+          }
+        },
+        { "title": "What kind of decline", "metrics": ["pf_pattern_mix"] },
+        { "title": "Trend", "metrics": ["pf_flagged_trend"] },
+        {
+          "title": "Product lines losing operators",
+          "metrics": ["bk_flagged", "bk_exposure", "bk_operators_buying", "bk_volume_trend", "bk_eroding", "bk_product_erosion"],
+          "filters": ["f_book_grain"],
+          "table": {
+            "defaultSort": { "metric": "bk_exposure", "direction": "desc" },
+            "sortable": ["bk_flagged", "bk_exposure", "bk_operators_buying", "bk_eroding"]
+          }
+        },
+        { "title": "Revenue", "metrics": ["pf_revenue_windows"] },
+        { "title": "Lines and products", "metrics": ["pf_flagged_relationships"] },
+        { "title": "Data", "metrics": ["pf_operators_by_state", "pf_reporting_completeness"] }
+      ],
+      "filters": ["f_snapshot", "f_size", "f_territory", "f_owner", "f_segment", "f_division"],
+      "drill": ["operator"]
+    },
+    {
+      "id": "operator", "label": "Operator", "role": "viewer",
+      "question": "Why is this operator flagged, and where?",
+      "headline": ["op_risk", "op_exposure", "op_revenue_trend", "op_recency", "op_breadth", "op_owner"],
+      "sections": [
+        { "title": "Verdict", "metrics": ["op_state", "op_headline_reason", "op_reporting"] },
+        { "title": "Signals at three levels", "metrics": ["op_signal_summary"] },
+        { "title": "Why", "metrics": ["op_reasons", "op_drivers"] },
+        { "title": "History", "metrics": ["op_revenue_monthly", "op_activity_records", "op_quantity_monthly", "op_lines_monthly", "op_active_months", "op_typical_gap"] },
+        { "title": "Price", "metrics": ["op_price_change", "op_discount", "op_billback", "op_peer_position"] },
+        { "title": "Compared with similar operators", "metrics": ["op_peer_gaps"] },
+        { "title": "Context", "metrics": ["op_concentration", "op_vs_lifetime", "op_portfolio_share", "op_agreements"] },
+        { "title": "Review", "metrics": ["op_review_status"] }
+      ],
+      "actions": [
+        { "id": "review_brief", "label": "Review brief", "kind": "printable", "question": "What facts do I need before talking to them?", "metrics": ["op_risk", "op_exposure", "op_owner", "op_reasons", "op_signal_summary", "op_revenue_trend", "op_recency", "op_breadth", "op_price_change", "op_reporting"] }
+      ],
+      "filters": ["f_snapshot"],
+      "drill": ["line", "product"]
+    },
+    {
+      "id": "line", "label": "Operator · Product line", "role": "viewer",
+      "question": "Is this product line slipping, and is price part of it?",
+      "headline": ["ln_risk", "ln_status", "ln_revenue_share", "ln_trend", "ln_price_change"],
+      "sections": [
+        { "title": "Volume", "metrics": ["ln_volume_monthly"] },
+        { "title": "Price", "metrics": ["ln_price_trend", "ln_peer_stats"] },
+        { "title": "Products", "metrics": ["ln_products"] },
+        { "title": "Insight", "metrics": ["ln_reasons"] }
+      ],
+      "filters": ["f_snapshot"],
+      "drill": ["product"]
+    },
+    {
+      "id": "product", "label": "Operator · Product", "role": "viewer",
+      "question": "Is this item being dropped or replaced?",
+      "headline": ["pr_risk", "pr_status", "pr_revenue", "pr_agreement_price", "pr_vs_peers", "pr_last_bought"],
+      "sections": [
+        { "title": "Volume", "metrics": ["pr_quantity_monthly"] },
+        { "title": "Price", "metrics": ["pr_price_trend", "pr_discount", "pr_billback"] },
+        { "title": "Substitution", "metrics": ["pr_down_line_stable", "pr_replaced_by"] },
+        { "title": "Insight", "metrics": ["pr_reasons"] }
+      ],
+      "filters": ["f_snapshot"],
+      "drill": []
+    },
+    {
+      "id": "analyst", "label": "Model health", "role": "analyst",
+      "question": "Is the model still working, and is the data still complete?",
+      "headline": ["an_precision_capacity", "an_recall_capacity", "an_auc", "an_calibration"],
+      "sections": [
+        { "title": "Over time", "metrics": ["an_prevalence", "an_backtest"] },
+        { "title": "Inputs", "metrics": ["an_drift", "an_feed_coverage"] },
+        { "title": "Explanations and reviews", "metrics": ["an_explanation_validity", "an_feedback", "an_dispositions"] }
+      ],
+      "filters": ["f_snapshot"],
+      "drill": []
+    }
+  ]
+}

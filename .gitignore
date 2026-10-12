@@ -1,2 +1,5 @@
-/uploads
+uploads/
 .DS_Store
+dist/
+tools/.cache/
+.playwright-mcp/

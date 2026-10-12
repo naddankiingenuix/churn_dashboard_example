@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Operator Churn Intelligence</title>
+<script src="./distributor-data.js"></script>
+<script src="./distributor-logic.js"></script>
+<script src="./distributor-format.js"></script>
+<script src="./distributor-model.js"></script>
+<script src="./distributor-narrative.js"></script>
+<script src="./distributor-rollups.js"></script>
+<script src="./views/view-common.js"></script>
+<script src="./views/view-overview.js"></script>
+<script src="./views/view-queue.js"></script>
+<script src="./views/view-operator.js"></script>
+<script src="./views/view-category.js"></script>
+<script src="./views/view-health.js"></script>
+<script src="../shared/url-state.js"></script>
+<script src="../shared/support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F3F1EC;color:#1B1D22;font-family:'IBM Plex Sans',sans-serif;-webkit-font-smoothing:antialiased}
+select,input,button{font-family:inherit}
+.top{background:#1B1D22;color:#F3F1EC;padding:0 28px;display:flex;align-items:center;gap:24px;min-height:56px;flex-wrap:wrap}
+.logo{width:22px;height:22px;border-radius:5px;background:#2E6F8E;display:grid;place-items:center;font:600 10px 'IBM Plex Mono',monospace;color:#fff}
+.tab{background:none;border:none;font-size:13px;font-weight:500;padding:0 12px;cursor:pointer;border-bottom:2px solid transparent;min-height:56px;white-space:nowrap}
+.filters{background:#fff;border-bottom:1px solid #E2DFD8;padding:12px 28px;display:flex;gap:18px;align-items:flex-end;flex-wrap:wrap}
+.f{display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#6A6E78}
+.in{height:34px;border:1px solid #D6D2CA;border-radius:6px;padding:0 10px;font-size:13px;color:#1B1D22;background:#FBFAF8;text-transform:none;letter-spacing:0;font-weight:400}
+.seg{display:flex;border:1px solid #D6D2CA;border-radius:6px;overflow:hidden;height:34px}
+.seg button{border:none;font-size:13px;font-weight:500;padding:0 12px;cursor:pointer;text-transform:none;letter-spacing:0}
+main{flex:1;padding:24px 28px 48px;max-width:1360px;width:100%;box-sizing:border-box;margin:0 auto}
+.stack{display:flex;flex-direction:column;gap:16px}
+.row{display:flex;flex-wrap:wrap;gap:16px}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.card{background:#fff;border:1px solid #E2DFD8;border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;gap:12px;min-width:0;box-sizing:border-box}
+.cardbtn{text-align:left;cursor:pointer;font:inherit;color:inherit}
+.cardbtn:hover{box-shadow:0 2px 10px rgba(27,29,34,.08)}
+.h{font-size:15px;font-weight:600}
+.h2{font-size:18px;font-weight:600;letter-spacing:-.01em}
+.sub{font-size:12px;color:#6A6E78;line-height:1.45}
+.lbl{font-size:11px;font-weight:600;color:#6A6E78;text-transform:uppercase;letter-spacing:.06em}
+.mono{font-family:'IBM Plex Mono',monospace}
+.num{font-family:'IBM Plex Mono',monospace;font-weight:600;letter-spacing:-.02em}
+.xl{font-size:32px}.lg{font-size:24px}.md{font-size:18px}
+.pill{display:inline-block;font-size:11px;font-weight:600;padding:3px 9px;border-radius:10px;white-space:nowrap}
+.ai{font-size:10px;font-weight:600;letter-spacing:.08em;padding:3px 6px;border-radius:4px;background:#E6E8FA;color:#2F3C9E}
+.btn{height:32px;border:1px solid #D6D2CA;background:#FBFAF8;border-radius:6px;padding:0 12px;font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap;color:#1B1D22}
+.btn:hover{background:#F1EFEA}
+.btn-dark{background:#1B1D22;color:#fff;border-color:#1B1D22;font-weight:600}
+.btn-dark:hover{background:#343740}
+.link{border:none;background:none;padding:0;font-size:13px;font-weight:600;color:#4A5BD4;cursor:pointer}
+.tw{overflow-x:auto}
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{padding:8px;font-size:11px;font-weight:600;color:#6A6E78;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #E2DFD8;white-space:nowrap}
+.tbl td{padding:11px 8px;border-bottom:1px solid #EEEBE5;vertical-align:middle}
+.tbl tr.click{cursor:pointer}
+.tbl tr.click:hover td{background:#F8F6F2}
+.r{text-align:right}.nw{white-space:nowrap}
+.meter{flex:1;height:6px;background:#EEEBE5;border-radius:3px;overflow:hidden;min-width:40px}
+.meter>div{height:100%}
+.mrow{display:flex;align-items:center;gap:8px}
+.dot{display:inline-block;width:9px;height:9px;border-radius:2px;flex:none}
+.bars{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:6px;align-items:end}
+.bar{display:flex;flex-direction:column;justify-content:flex-end;height:100%;gap:4px;align-items:center}
+.bar>div:last-child{width:100%;border-radius:3px 3px 0 0}
+.months{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:6px;font-size:10px;color:#6A6E78;text-align:center;font-family:'IBM Plex Mono',monospace}
+.stk{display:flex;flex-direction:column-reverse;height:100%;gap:1px}
+.spark{display:grid;grid-template-columns:repeat(12,1fr);gap:2px;height:28px;align-items:end}
+.spark>div{border-radius:1px}
+.para{font-size:15px;line-height:1.6;color:#2A2D33;text-wrap:pretty;max-width:900px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:11px;color:#6A6E78}
+.legend span{display:flex;align-items:center;gap:5px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chip{height:30px;border:1px solid #D6D2CA;border-radius:15px;padding:0 13px;font-size:12px;font-weight:500;cursor:pointer}
+.note{font-size:12px;color:#454850;background:#F6F4EF;border-radius:6px;padding:9px 11px;line-height:1.5}
+.banner{background:#1B1D22;color:#F3F1EC;border-radius:10px;padding:22px 24px;display:flex;gap:20px;align-items:center;flex-wrap:wrap}
+.banner b{color:#fff}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.step{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;font-size:13px;line-height:1.45}
+.step>span:first-child{width:24px;height:24px;border-radius:12px;background:#2E6F8E;color:#fff;display:grid;place-items:center;font-weight:600;font-size:12px}
+.change{border-left:4px solid;border-radius:8px;background:#fff;border-top:1px solid #E2DFD8;border-right:1px solid #E2DFD8;border-bottom:1px solid #E2DFD8;padding:14px 16px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.lvl{border:1px solid;border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.kv{display:flex;flex-direction:column;gap:3px}
+.drv{display:grid;grid-template-columns:minmax(0,1fr) 70px 64px;gap:10px;align-items:center;font-size:13px;padding:5px 0}
+.gloss{display:grid;grid-template-columns:180px minmax(0,1fr);gap:6px 16px;font-size:13px;line-height:1.5}
+.gloss>b{font-weight:600}
+.tbl tr.click:focus-visible td,.tbl th[tabindex="0"]:focus-visible,.cardbtn:focus-visible,.btn:focus-visible,.link:focus-visible,.chip:focus-visible,.tab:focus-visible{outline:2px solid #4F9DA6;outline-offset:-2px}
+.tbl th[tabindex="0"]:hover{color:#1B1D22}
+.ftoggle{display:none}
+@media (max-width:700px){
+  .top{padding:0 16px;gap:12px}
+  /* !important: these elements set their layout inline */
+  .top nav{flex-wrap:nowrap!important;overflow-x:auto;max-width:100%}
+  .filters{padding:10px 16px}
+  .ftoggle{display:inline-flex;align-items:center}
+  .filters.closed>*:not(.ftoggle){display:none!important}
+  main{padding:16px 16px 40px}
+}
+@media print{body *{visibility:hidden!important}#brief,#brief *{visibility:visible!important}[data-brief-backdrop]{position:static!important;background:none!important;padding:0!important;overflow:visible!important}#brief{position:absolute!important;left:0;top:0;width:100%!important;max-width:none!important;box-shadow:none!important;border:none!important}[data-noprint]{display:none!important}}
+</style>
+</helmet>
+<div style="min-height:100vh;display:flex;flex-direction:column">
+  <header class="top">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="logo">DC</div>
+      <div style="font-weight:600;font-size:15px;letter-spacing:-0.01em;white-space:nowrap">Operator Churn Intelligence</div>
+    </div>
+    <nav style="display:flex;gap:2px;align-self:stretch;flex-wrap:wrap">
+      <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="5">
+        <button class="tab" onClick="{{ t.go }}" style="color:{{ t.color }};border-bottom-color:{{ t.border }}">{{ t.label }}</button>
+      </sc-for>
+    </nav>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:14px">
+      <span class="mono" style="font-size:12px;color:#A9ACB4;white-space:nowrap" title="{{ freshnessDetail }}">{{ freshness }}</span>
+      <button class="btn" onClick="{{ openAnalyst }}" style="background:transparent;color:#A9ACB4;border-color:#454850" title="Model diagnostics for the analytics team">Analyst</button>
+      <button class="btn" onClick="{{ openHelp }}" style="background:#2A2D33;color:#F3F1EC;border-color:#454850">? Help</button>
+    </div>
+  </header>
+
+  <sc-if value="{{ showFilters }}" hint-placeholder-val="{{ true }}">
+  <div class="filters {{ filtersClass }}">
+    <button class="btn ftoggle" onClick="{{ toggleFilters }}" aria-expanded="{{ filtersOpen }}">{{ filtersLabel }}</button>
+    <label class="f">Find an operator
+      <input class="in" value="{{ search }}" onChange="{{ onSearch }}" placeholder="Name, ID or city" style="width:220px">
+    </label>
+    <label class="f">Branch
+      <select class="in" value="{{ branch }}" onChange="{{ onBranch }}" style="min-width:130px">
+        <sc-for list="{{ branchOpts }}" as="o" hint-placeholder-count="3"><option value="{{ o }}">{{ o }}</option></sc-for>
+      </select>
+    </label>
+    <label class="f">Operator type
+      <select class="in" value="{{ otype }}" onChange="{{ onOtype }}" style="min-width:140px">
+        <sc-for list="{{ otypeOpts }}" as="o" hint-placeholder-count="3"><option value="{{ o }}">{{ o }}</option></sc-for>
+      </select>
+    </label>
+    <div class="f">Operator size
+      <div class="seg">
+        <sc-for list="{{ segOpts }}" as="s" hint-placeholder-count="4"><button onClick="{{ s.pick }}" style="background:{{ s.bg }};color:{{ s.color }}">{{ s.label }}</button></sc-for>
+      </div>
+    </div>
+    <div style="margin-left:auto;display:flex;gap:14px;font-size:12px;color:#6A6E78;align-items:center;flex-wrap:wrap">
+      <sc-for list="{{ tierLegend }}" as="t" hint-placeholder-count="3">
+        <span style="display:flex;align-items:center;gap:6px" title="{{ t.meaning }}"><span class="dot" style="background:{{ t.color }}"></span>{{ t.label }} <span class="mono">{{ t.range }}</span></span>
+      </sc-for>
+    </div>
+  </div>
+
+  </sc-if>
+
+  <!-- ============================================================ HELP -->
+  <sc-if value="{{ helpOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeHelp }}" style="position:fixed;inset:0;background:rgba(27,29,34,0.45);z-index:60;display:flex;justify-content:center;align-items:flex-start;padding:40px 16px;overflow-y:auto">
+      <div onClick="{{ stopClick }}" style="background:#fff;border-radius:10px;width:100%;max-width:760px;padding:28px 32px;display:flex;flex-direction:column;gap:18px;box-sizing:border-box">
+        <div style="display:flex;justify-content:space-between;align-items:center"><div class="h2">How to read this dashboard</div><button class="btn" onClick="{{ closeHelp }}">Close</button></div>
+        <div class="steps">
+          <div class="step"><span>1</span><span><b>Start with the Risk queue.</b> It lists the operators that need a review, biggest revenue at risk first.</span></div>
+          <div class="step"><span>2</span><span><b>Open an operator.</b> The page reads top to bottom: what changed, where, why, and the facts.</span></div>
+          <div class="step"><span>3</span><span><b>Use the review brief</b> before you talk to them. It lists facts and questions — never a price.</span></div>
+        </div>
+        <div class="lbl">Words used on these screens</div>
+        <div class="gloss">
+          <b>Risk score</b><span>The model's estimate (0–100%) that this operator cuts spending with us sharply in the next 90 days.</span>
+          <b>High / Medium / Low risk</b><span>Score bands. High = likely to cut spending sharply. Medium = early warning signs. Low = buying normally.</span>
+          <b>Revenue at risk</b><span>What the operator usually spends with us in a quarter (Oct–Mar), multiplied by their risk score. Used to decide who to look at first.</span>
+          <sc-for list="{{ scopeHelp }}" as="g" hint-placeholder-count="5"><b>{{ g.label }}</b><span>{{ g.hint }}</span></sc-for>
+          <b>Who should review</b><span>The team best placed to act, chosen from what changed: Sales, Category team, Pricing or Customer service.</span>
+          <b>Last quarter</b><span>Jul–Sep 2026 compared with Apr–Jun 2026. "Before" means Oct 2025 – Mar 2026.</span>
+        </div>
+        <div class="note">{{ guardrail }}</div>
+        <div class="sub">All numbers in this prototype are simulated. The header shows the latest invoice date received and when risk was scored; how often invoices arrive depends on the distributor's own data feed.</div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============================================================ BRIEF -->
+  <sc-if value="{{ briefOpen }}" hint-placeholder-val="{{ false }}">
+    <div data-brief-backdrop="1" onClick="{{ closeBrief }}" style="position:fixed;inset:0;background:rgba(27,29,34,0.45);z-index:50;display:flex;justify-content:center;align-items:flex-start;padding:40px 16px;overflow-y:auto">
+      <div id="brief" onClick="{{ stop }}" style="background:#fff;border-radius:10px;width:100%;max-width:780px;box-shadow:0 20px 60px rgba(0,0,0,0.25);padding:32px 36px;display:flex;flex-direction:column;gap:20px;box-sizing:border-box">
+        <div data-noprint="1" style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
+          <button class="btn" onClick="{{ copyBrief }}">{{ copyLabel }}</button>
+          <button class="btn btn-dark" onClick="{{ printBrief }}">Print / Save as PDF</button>
+          <button class="btn" onClick="{{ closeBrief }}">Close</button>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;border-bottom:2px solid #1B1D22;padding-bottom:14px">
+          <div>
+            <div class="lbl">Operator review brief · {{ briefDate }}</div>
+            <div style="font-size:26px;font-weight:600;letter-spacing:-0.015em;margin-top:4px">{{ op.name }}</div>
+            <div class="sub" style="margin-top:4px">{{ op.place }}</div>
+          </div>
+          <div style="display:flex;gap:24px">
+            <div><div class="lbl">Risk</div><span class="pill" style="background:{{ op.risk.bg }};color:{{ op.risk.ink }};margin-top:6px">{{ op.risk.label }}</span></div>
+            <div><div class="lbl">At risk / qtr</div><div class="num md">{{ op.revAtRisk }}</div></div>
+            <div><div class="lbl">Review</div><div style="font-weight:600;margin-top:4px">{{ op.team.label }}</div></div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px"><div class="lbl">In short</div><div class="para">{{ op.summary }}</div></div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div class="lbl">Facts to review</div>
+          <sc-for list="{{ facts }}" as="f" hint-placeholder-count="5">
+            <div style="display:grid;grid-template-columns:80px minmax(0,1fr);gap:10px;font-size:13px;line-height:1.5;padding:3px 0"><span class="sub" style="font-weight:600">{{ f.topic }}</span><span>{{ f.text }}</span></div>
+          </sc-for>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div class="lbl">Questions to ask</div>
+          <sc-for list="{{ questions }}" as="q" hint-placeholder-count="3">
+            <div style="display:grid;grid-template-columns:22px minmax(0,1fr);gap:8px;font-size:13px;line-height:1.5"><span class="mono sub">{{ q.n }}</span><span>{{ q.q }}</span></div>
+          </sc-for>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px">
+          <div style="display:flex;flex-direction:column;gap:6px"><div class="lbl">Notes</div><div style="border-bottom:1px solid #D6D2CA;height:26px"></div><div style="border-bottom:1px solid #D6D2CA;height:26px"></div><div style="border-bottom:1px solid #D6D2CA;height:26px"></div></div>
+          <div style="display:flex;flex-direction:column;gap:6px"><div class="lbl">Outcome</div><div style="display:flex;flex-direction:column;gap:8px;font-size:13px;padding-top:6px"><span>☐ No issue — keep as is</span><span>☐ Follow-up needed</span><span>☐ At risk — escalate</span></div></div>
+        </div>
+        <div class="note">{{ op.guardrail }}</div>
+      </div>
+    </div>
+  </sc-if>
+
+  <main>
+  <!-- ============================================================ OVERVIEW -->
+  <sc-if value="{{ isOverview }}" hint-placeholder-val="{{ true }}">
+    <div class="stack">
+      <sc-if value="{{ introOpen }}" hint-placeholder-val="{{ true }}">
+        <div class="card" style="background:#F1F6F8;border-color:#C9DDE5">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div class="h">New here? Three steps</div><button class="link" onClick="{{ closeIntro }}">Got it, hide this</button></div>
+          <div class="steps">
+            <div class="step"><span>1</span><span><b>Read the summary below</b> — how many operators need a look and why.</span></div>
+            <div class="step"><span>2</span><span><b>Open the Risk queue</b> — operators to review, biggest revenue at risk first.</span></div>
+            <div class="step"><span>3</span><span><b>Click an operator</b> — see what changed and get a one-page brief to review before talking to them.</span></div>
+          </div>
+        </div>
+      </sc-if>
+
+      <div class="banner">
+        <div style="flex:1 1 520px;font-size:17px;line-height:1.55">
+          <sc-if value="{{ banner.hasFlagged }}" hint-placeholder-val="{{ true }}"><span><b>{{ banner.count }} of {{ banner.total }} operators</b> need a review, with <b>{{ banner.revFmt }}</b> of revenue at risk per quarter. {{ banner.scope }}. The category slipping most is <b>{{ banner.category }}</b>.</span></sc-if>
+          <sc-if value="{{ banner.noFlagged }}" hint-placeholder-val="{{ false }}"><span>No operators in this view need a review right now.</span></sc-if>
+        </div>
+        <button class="btn" onClick="{{ goQueue }}" style="height:40px;padding:0 18px;font-size:14px;font-weight:600;background:#fff">Open the risk queue →</button>
+      </div>
+
+      <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">
+        <div class="card"><div class="lbl">Active operators</div><div class="num xl">{{ book.operators }}</div><div class="sub">{{ book.operatorsNote }} · whole book</div></div>
+        <div class="card"><div class="lbl">Revenue · last 90 days</div><div class="num xl">{{ book.rev90 }}</div><div class="sub">{{ book.rev90Note }}</div></div>
+        <div class="card">
+          <div class="lbl">Revenue at risk per quarter · trend</div>
+          <div style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;height:56px;align-items:end"><sc-for list="{{ book.trend }}" as="b" hint-placeholder-count="6"><div title="{{ b.v }}" style="height:{{ b.h }};background:{{ b.bg }};border-radius:3px 3px 0 0"></div></sc-for></div>
+          <div class="sub">{{ book.trendNote }} · whole book</div>
+        </div>
+      </div>
+
+      <div class="grid">
+        <sc-for list="{{ book.tiers }}" as="t" hint-placeholder-count="3">
+          <div class="card" style="border-top:4px solid {{ t.color }};gap:6px">
+            <div class="h">{{ t.label }}</div>
+            <div style="display:flex;align-items:baseline;gap:8px"><div class="num lg">{{ t.count }}</div><div class="sub">operators · {{ t.share }}</div></div>
+            <div class="sub">{{ t.meaning }}</div>
+          </div>
+        </sc-for>
+      </div>
+
+      <div class="row">
+        <div class="card" style="flex:3 1 560px">
+          <div><div class="h">What is happening?</div><div class="sub">Operators needing review, grouped by how their buying changed · click to see them</div></div>
+          <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px">
+            <sc-for list="{{ scopeCards }}" as="s" hint-placeholder-count="4">
+              <button class="card cardbtn" onClick="{{ s.go }}" style="padding:14px 16px;gap:6px;border-left:4px solid {{ s.ink }}">
+                <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span class="pill" style="background:{{ s.bg }};color:{{ s.ink }}">{{ s.label }}</span><span class="num md">{{ s.count }}</span></div>
+                <div class="sub">{{ s.hint }}</div>
+                <div style="font-size:13px"><b class="mono">{{ s.revFmt }}</b> <span class="sub">at risk / qtr</span></div>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+        <div class="card" style="flex:2 1 380px">
+          <div><div class="h">Who needs to act?</div><div class="sub">Suggested review team for each flagged operator · click to see their list</div></div>
+          <sc-for list="{{ teamCards }}" as="t" hint-placeholder-count="4">
+            <button class="cardbtn" onClick="{{ t.go }}" style="border:1px solid #E2DFD8;background:#fff;border-radius:8px;padding:10px 14px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;align-items:center">
+              <span><span class="pill" style="background:{{ t.bg }};color:{{ t.ink }}">{{ t.label }}</span></span>
+              <span class="mono" style="font-weight:600">{{ t.count }} operators · {{ t.revFmt }}</span>
+              <span class="sub" style="grid-column:1 / -1">{{ t.focus }}</span>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="card" style="flex:3 1 560px">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap"><div><div class="h">Review these first</div><div class="sub">The five operators with the most revenue at risk</div></div><button class="link" onClick="{{ goQueue }}">See all →</button></div>
+          <sc-for list="{{ topList }}" as="t" hint-placeholder-count="5">
+            <button class="cardbtn" onClick="{{ t.open }}" style="border:none;border-bottom:1px solid #EEEBE5;background:none;padding:10px 0;display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:12px;align-items:center">
+              <span class="num md" style="color:#A9ACB4">{{ t.n }}</span>
+              <span style="min-width:0"><span style="font-weight:600">{{ t.name }}</span> <span class="sub">· {{ t.place }}</span><div style="font-size:13px;margin-top:2px">{{ t.headline }}</div></span>
+              <span style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><span class="pill" style="background:{{ t.risk.bg }};color:{{ t.risk.ink }}">{{ t.risk.label }}</span><span class="mono" style="font-size:12px">{{ t.revFmt }} at risk</span></span>
+            </button>
+          </sc-for>
+        </div>
+        <div class="card" style="flex:2 1 380px">
+          <div><div class="h">Categories slipping most</div><div class="sub">By revenue at risk · click for detail</div></div>
+          <sc-for list="{{ catTop }}" as="c" hint-placeholder-count="4">
+            <button class="cardbtn" onClick="{{ c.go }}" style="border:1px solid #E2DFD8;background:#fff;border-radius:8px;padding:10px 14px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;align-items:center">
+              <span class="mrow" style="font-weight:600"><span class="dot" style="background:{{ c.color }}"></span>{{ c.name }}</span>
+              <span class="mono" style="font-weight:600">{{ c.revFmt }}</span>
+              <span class="sub" style="grid-column:1 / -1">{{ c.note }}</span>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============================================================ RISK QUEUE -->
+  <sc-if value="{{ isQueue }}" hint-placeholder-val="{{ false }}">
+    <div class="stack">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px">
+          <div><div class="h2">Operator risk queue</div><div class="sub">Operators that need a review, biggest revenue at risk first. Click a row to see why · click a column title to sort.</div></div>
+          <div class="mrow"><span class="sub"><b style="color:#1B1D22">{{ qCount }}</b> of {{ qTotal }} shown · <b style="color:#1B1D22">{{ qRev }}</b> at risk / qtr</span><button class="btn" onClick="{{ exportQueue }}">Export CSV</button></div>
+        </div>
+        <div style="display:grid;grid-template-columns:120px minmax(0,1fr);gap:10px 12px;align-items:center">
+          <span class="lbl">Risk level</span><div class="chips"><sc-for list="{{ qTierChips }}" as="c" hint-placeholder-count="3"><button class="chip" onClick="{{ c.pick }}" style="background:{{ c.bg }};color:{{ c.color }};border-color:{{ c.border }}">{{ c.label }}</button></sc-for></div>
+          <span class="lbl">What's happening</span><div class="chips"><sc-for list="{{ qScopeChips }}" as="c" hint-placeholder-count="6"><button class="chip" onClick="{{ c.pick }}" style="background:{{ c.bg }};color:{{ c.color }};border-color:{{ c.border }}">{{ c.label }}</button></sc-for></div>
+          <span class="lbl">Review team</span><div class="chips"><sc-for list="{{ qTeamChips }}" as="c" hint-placeholder-count="5"><button class="chip" onClick="{{ c.pick }}" style="background:{{ c.bg }};color:{{ c.color }};border-color:{{ c.border }}">{{ c.label }}</button></sc-for><sc-if value="{{ qFiltered }}" hint-placeholder-val="{{ false }}"><button class="link" onClick="{{ qClear }}" style="margin-left:8px">Clear filters</button></sc-if><sc-if value="{{ qSorted }}" hint-placeholder-val="{{ false }}"><button class="link" onClick="{{ qResetSort }}" style="margin-left:8px">Back to default order</button></sc-if></div>
+        </div>
+        <div class="tw">
+          <table class="tbl" style="min-width:1060px">
+            <thead><tr><sc-for list="{{ qHead }}" as="h" hint-placeholder-count="7"><th style="text-align:{{ h.align }};cursor:{{ h.cursor }}" onClick="{{ h.sort }}" onKeyDown="{{ h.key }}" tabIndex="{{ h.tab }}" aria-sort="{{ h.aria }}" title="{{ h.title }}">{{ h.label }}{{ h.arrow }}</th></sc-for></tr></thead>
+            <tbody>
+              <sc-for list="{{ qRows }}" as="r" hint-placeholder-count="8">
+                <tr class="click" onClick="{{ r.open }}" onKeyDown="{{ r.key }}" tabIndex="0" aria-label="Open {{ r.name }}">
+                  <td class="r num" style="color:#A9ACB4;width:28px">{{ r.n }}</td>
+                  <td style="min-width:200px"><div style="font-weight:600">{{ r.name }}</div><div class="sub" style="font-size:11px">{{ r.place }}</div></td>
+                  <td style="min-width:260px"><div style="font-weight:500">{{ r.headline }}</div><span class="pill" style="background:{{ r.scope.bg }};color:{{ r.scope.ink }};margin-top:4px">{{ r.scope.label }}</span></td>
+                  <td><span class="pill" style="background:{{ r.risk.bg }};color:{{ r.risk.ink }}">{{ r.risk.label }}</span></td>
+                  <td class="r num" style="font-size:14px">{{ r.revFmt }}</td>
+                  <td class="nw"><span style="color:{{ r.lastColor }};font-weight:500">{{ r.last }}</span><div class="sub" style="font-size:11px">{{ r.usual }}</div></td>
+                  <td style="max-width:240px"><span class="pill" style="background:{{ r.team.bg }};color:{{ r.team.ink }}">{{ r.team.label }}</span><div class="sub" style="font-size:11px;margin-top:3px">{{ r.focus }}</div></td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+          <sc-if value="{{ qEmpty }}" hint-placeholder-val="{{ false }}"><div class="sub" style="padding:24px 8px">No operators match these filters.</div></sc-if>
+        </div>
+      </div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><div><div class="h">Healthy operators ({{ healthyCount }})</div><div class="sub">Buying normally — no review needed</div></div><button class="link" onClick="{{ toggleHealthy }}">{{ healthyLabel }}</button></div>
+        <sc-if value="{{ showHealthy }}" hint-placeholder-val="{{ false }}">
+          <table class="tbl">
+            <tbody>
+              <sc-for list="{{ healthyRows }}" as="r" hint-placeholder-count="4">
+                <tr class="click" onClick="{{ r.open }}" onKeyDown="{{ r.key }}" tabIndex="0" aria-label="Open {{ r.name }}"><td style="font-weight:500">{{ r.name }}</td><td class="sub">{{ r.place }}</td><td><span class="pill" style="background:{{ r.risk.bg }};color:{{ r.risk.ink }}">{{ r.risk.label }}</span></td><td class="r mono">{{ r.spend }} last 3 mo</td><td class="sub">last order {{ r.last }}</td></tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============================================================ OPERATOR -->
+  <sc-if value="{{ isOperator }}" hint-placeholder-val="{{ false }}">
+    <div class="stack">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <button class="link" onClick="{{ backToQueue }}">← Risk queue</button>
+        <select class="in" value="{{ op.id }}" onChange="{{ onPickOp }}" style="font-weight:600;max-width:300px">
+          <sc-for list="{{ opOpts }}" as="o" hint-placeholder-count="5"><option value="{{ o.id }}">{{ o.name }}</option></sc-for>
+        </select>
+        <div style="margin-left:auto;display:flex;gap:8px">
+          <button class="btn" onClick="{{ copyLink }}">{{ copyLinkLabel }}</button>
+          <button class="btn" onClick="{{ exportOp }}">Export products</button>
+          <button class="btn btn-dark" onClick="{{ openBrief }}">Open review brief</button>
+        </div>
+      </div>
+
+      <div class="card" style="border-left:6px solid {{ op.tierColor }};gap:16px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap">
+          <div style="min-width:0">
+            <div style="font-size:26px;font-weight:600;letter-spacing:-0.015em">{{ op.name }}</div>
+            <div class="sub" style="margin-top:2px">{{ op.place }}</div>
+          </div>
+          <div style="text-align:right"><span class="pill" style="background:{{ op.risk.bg }};color:{{ op.risk.ink }};font-size:13px;padding:5px 12px">{{ op.risk.label }}</span><div class="sub" style="margin-top:4px">{{ op.tierMeaning }}</div></div>
+        </div>
+        <div style="font-size:20px;font-weight:600;letter-spacing:-0.01em">{{ op.headline }} <span class="pill" style="background:{{ op.scope.bg }};color:{{ op.scope.ink }};vertical-align:middle">{{ op.scope.label }}</span></div>
+        <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+          <div class="kv"><span class="lbl">Revenue at risk / qtr</span><span class="num lg">{{ op.revAtRisk }}</span><span class="sub">usual quarterly spend × risk score</span></div>
+          <div class="kv"><span class="lbl">Spend · last 3 months</span><span class="num lg">{{ op.spend3 }}</span><span class="sub" style="color:{{ op.spendColor }}">{{ op.spendChange }}</span></div>
+          <div class="kv"><span class="lbl">Last order</span><span class="num lg" style="color:{{ op.lastColor }}">{{ op.last }}</span><span class="sub">{{ op.lastSub }}</span></div>
+          <div class="kv" style="background:#F6F4EF;border-radius:8px;padding:10px 12px"><span class="lbl">Who should review</span><span><span class="pill" style="background:{{ op.team.bg }};color:{{ op.team.ink }};font-size:12px">{{ op.team.label }}</span></span><span class="sub">{{ op.focus }}</span></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="h" style="margin-bottom:8px">What changed</div>
+        <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px">
+          <sc-for list="{{ changed }}" as="c" hint-placeholder-count="4">
+            <div class="change" style="border-left-color:{{ c.border }}"><div style="font-weight:600">{{ c.title }}</div><div class="sub" style="font-size:13px">{{ c.detail }}</div></div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div class="card">
+        <div><div class="h">Where is the decline?</div><div class="sub">Checked at three levels — whole operator, each category, each product. Highlighted levels are where things changed.</div></div>
+        <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px">
+          <sc-for list="{{ levels }}" as="l" hint-placeholder-count="3">
+            <div class="lvl" style="background:{{ l.bg }};border-color:{{ l.border }}">
+              <div class="lbl" style="color:{{ l.ink }}">{{ l.n }} · {{ l.level }}</div>
+              <div style="font-weight:600;font-size:16px;color:{{ l.ink }}">{{ l.verdict }}</div>
+              <div style="font-size:13px;color:#454850">{{ l.detail }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+          <div class="mrow"><span class="ai">AI</span><div class="h">In plain words</div></div>
+          <sc-if value="{{ showFeedback }}" hint-placeholder-val="{{ true }}">
+            <div class="mrow sub"><span>{{ fbLabel }}</span><button class="btn" onClick="{{ fbUp }}" style="background:{{ fbUpBg }}">👍 Yes</button><button class="btn" onClick="{{ fbDown }}" style="background:{{ fbDownBg }}">👎 Not right</button></div>
+          </sc-if>
+        </div>
+        <div class="para">{{ op.summary }}</div>
+        <div class="note">{{ op.guardrail }}</div>
+      </div>
+
+      <div class="row">
+        <div class="card" style="flex:2 1 520px">
+          <div><div class="h">Monthly spend with us</div><div class="sub">{{ op.volNote }}</div></div>
+          <div class="bars" style="height:160px">
+            <sc-for list="{{ op.vol }}" as="b" hint-placeholder-count="12"><div class="bar"><div class="mono" style="font-size:9px;color:#6A6E78">{{ b.v }}</div><div style="height:{{ b.h }};background:{{ b.bg }}"></div></div></sc-for>
+          </div>
+          <div class="months"><sc-for list="{{ op.vol }}" as="b" hint-placeholder-count="12"><div>{{ b.m }}</div></sc-for></div>
+          <div class="months" style="color:#1B1D22"><sc-for list="{{ op.orders }}" as="o" hint-placeholder-count="12"><div>{{ o }}</div></sc-for></div>
+        </div>
+        <div class="card" style="flex:1 1 300px">
+          <div><div class="h">Ordering, week by week</div><div class="sub">Each square is a week, last 13 weeks. Dark = they ordered.</div></div>
+          <div style="display:grid;grid-template-columns:repeat(13,minmax(0,1fr));gap:4px">
+            <sc-for list="{{ op.weeks }}" as="w" hint-placeholder-count="13"><div title="{{ w.title }}" style="height:26px;background:{{ w.bg }};border-radius:4px"></div></sc-for>
+          </div>
+          <div class="sub mono" style="display:flex;justify-content:space-between;font-size:10px"><span>13 weeks ago</span><span>this week</span></div>
+          <div style="font-size:14px;font-weight:500">{{ op.weeksNote }}</div>
+          <div class="sub">Last order <b style="color:{{ op.lastColor }}">{{ op.last }}</b> — they {{ op.lastSub }}.</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div><div class="h">Categories</div><div class="sub">What they buy from us, by category. Click a category to see its products.</div></div>
+        <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px">
+          <sc-for list="{{ catCards }}" as="c" hint-placeholder-count="6">
+            <button class="card cardbtn" onClick="{{ c.pick }}" style="padding:12px 14px;gap:6px;border:2px solid {{ c.border }}">
+              <div class="mrow" style="justify-content:space-between"><span class="mrow" style="font-weight:600;font-size:13px"><span class="dot" style="background:{{ c.color }}"></span>{{ c.name }}</span></div>
+              <div class="mrow"><span class="pill" style="background:{{ c.status.bg }};color:{{ c.status.ink }}">{{ c.status.label }}</span><sc-if value="{{ c.hasFlag }}" hint-placeholder-val="{{ false }}"><span class="pill" style="background:#E6E8FA;color:#2F3C9E">{{ c.flag }}</span></sc-if></div>
+              <div class="spark"><sc-for list="{{ c.spark }}" as="s" hint-placeholder-count="12"><div style="height:{{ s.h }};background:{{ s.bg }}"></div></sc-for></div>
+              <div style="display:flex;justify-content:space-between;font-size:12px"><span class="mono">{{ c.spend }} / yr</span><span style="color:{{ c.changeColor }}">{{ c.change }}</span></div>
+            </button>
+          </sc-for>
+        </div>
+        <div style="border-top:1px solid #EEEBE5;padding-top:14px;display:flex;flex-direction:column;gap:12px">
+          <div class="mrow h"><span class="dot" style="background:{{ catDetail.color }}"></span>{{ catDetail.name }} — products</div>
+          <div class="note" style="font-size:13px">{{ catDetail.note }}</div>
+          <div class="row" style="align-items:flex-start">
+            <div style="flex:1 1 340px;display:flex;flex-direction:column;gap:8px;min-width:0">
+              <div class="sub">Units bought each month, by product</div>
+              <div class="bars" style="height:120px;align-items:stretch">
+                <sc-for list="{{ catDetail.stack }}" as="b" hint-placeholder-count="12"><div style="display:flex;flex-direction:column;justify-content:flex-end"><div class="stk"><sc-for list="{{ b.segs }}" as="s" hint-placeholder-count="2"><div title="{{ s.title }}" style="height:{{ s.h }};background:{{ s.bg }}"></div></sc-for></div></div></sc-for>
+              </div>
+              <div class="months"><sc-for list="{{ catDetail.stack }}" as="b" hint-placeholder-count="12"><div>{{ b.m }}</div></sc-for></div>
+              <div class="legend"><sc-for list="{{ catDetail.legend }}" as="l" hint-placeholder-count="2"><span><span class="dot" style="background:{{ l.color }}"></span>{{ l.name }}</span></sc-for></div>
+            </div>
+            <div class="tw" style="flex:2 1 520px">
+              <table class="tbl">
+                <thead><tr><sc-for list="{{ catDetail.head }}" as="h" hint-placeholder-count="6"><th style="text-align:{{ h.align }}">{{ h.label }}</th></sc-for></tr></thead>
+                <tbody>
+                  <sc-for list="{{ catDetail.rows }}" as="p" hint-placeholder-count="3">
+                    <tr>
+                      <td><span class="mrow" style="font-weight:500"><span class="dot" style="background:{{ p.color }}"></span>{{ p.name }}</span></td>
+                      <td><span class="pill" style="background:{{ p.status.bg }};color:{{ p.status.ink }}">{{ p.status.label }}</span></td>
+                      <td class="r mono">{{ p.spend }}</td>
+                      <td class="r mono" style="color:{{ p.changeColor }}">{{ p.change }}</td>
+                      <td class="nw sub">{{ p.last }}</td>
+                      <td style="font-size:12px;font-weight:500">{{ p.note }}</td>
+                    </tr>
+                  </sc-for>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div><div class="h">Why the model scored it this way</div><div class="sub">{{ drivers.note }}</div></div>
+        <div class="row" style="gap:28px">
+          <div style="flex:1 1 360px;min-width:0">
+            <div class="lbl" style="color:#B63A24;margin-bottom:6px">▲ Raising the risk</div>
+            <sc-for list="{{ drivers.up }}" as="d" hint-placeholder-count="4">
+              <div class="drv" title="{{ d.title }}"><span>{{ d.text }}</span><div class="meter"><div style="width:{{ d.w }};background:#D9492F"></div></div><span class="sub r">{{ d.word }}</span></div>
+            </sc-for>
+          </div>
+          <div style="flex:1 1 300px;min-width:0">
+            <div class="lbl" style="color:#2E8A6E;margin-bottom:6px">▼ Lowering the risk</div>
+            <sc-for list="{{ drivers.down }}" as="d" hint-placeholder-count="3">
+              <div class="drv" title="{{ d.title }}"><span>{{ d.text }}</span><div class="meter"><div style="width:{{ d.w }};background:#2E8A6E"></div></div><span class="sub r">{{ d.word }}</span></div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="card" style="flex:1 1 440px">
+          <div><div class="h">Price and margin</div><div class="sub">Is price part of the story?</div></div>
+          <div class="grid" style="grid-template-columns:repeat(2,minmax(0,1fr));gap:14px">
+            <sc-for list="{{ money }}" as="m" hint-placeholder-count="4"><div class="kv"><span class="sub">{{ m.label }}</span><span class="num md" style="color:{{ m.color }}">{{ m.v }}</span><span class="sub" style="font-size:11px">{{ m.sub }}</span></div></sc-for>
+          </div>
+        </div>
+        <div class="card" style="flex:1 1 380px">
+          <div><div class="h">Delivery and service</div><div class="sub">Could a service problem explain it?</div></div>
+          <div class="grid" style="grid-template-columns:repeat(3,minmax(0,1fr));gap:14px">
+            <sc-for list="{{ service }}" as="m" hint-placeholder-count="3"><div class="kv"><span class="sub">{{ m.label }}</span><span class="num md" style="color:{{ m.color }}">{{ m.v }}</span><span class="sub" style="font-size:11px">{{ m.sub }}</span></div></sc-for>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="card" style="flex:3 1 520px">
+          <div><div class="h">Facts to review before talking to them</div><div class="sub">Straight from our invoices</div></div>
+          <sc-for list="{{ facts }}" as="f" hint-placeholder-count="6">
+            <div style="display:grid;grid-template-columns:80px minmax(0,1fr);gap:10px;font-size:13px;line-height:1.5;padding:5px 0;border-bottom:1px solid #F1EFEA"><span class="sub" style="font-weight:600">{{ f.topic }}</span><span>{{ f.text }}</span></div>
+          </sc-for>
+        </div>
+        <div class="card" style="flex:2 1 340px">
+          <div><div class="h">Questions to ask</div><div class="sub">To understand what changed — not to propose terms</div></div>
+          <sc-for list="{{ questions }}" as="q" hint-placeholder-count="3">
+            <div style="display:grid;grid-template-columns:22px minmax(0,1fr);gap:8px;font-size:14px;line-height:1.5"><span class="mono sub">{{ q.n }}</span><span>{{ q.q }}</span></div>
+          </sc-for>
+          <button class="btn btn-dark" onClick="{{ openBrief }}" style="align-self:flex-start;margin-top:auto">Open review brief</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ========================================================== CATEGORIES -->
+  <sc-if value="{{ isCategories }}" hint-placeholder-val="{{ false }}">
+    <div class="stack">
+      <div class="card">
+        <div><div class="h2">Category risk</div><div class="sub">Which product categories are slipping, who is behind it, and which products are replacing which. Click a category.</div></div>
+        <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px">
+          <sc-for list="{{ catCardsAll }}" as="c" hint-placeholder-count="8">
+            <button class="card cardbtn" onClick="{{ c.pick }}" style="padding:12px 14px;gap:6px;border:2px solid {{ c.border }}">
+              <div class="mrow" style="justify-content:space-between"><span class="mrow" style="font-weight:600"><span class="dot" style="background:{{ c.color }}"></span>{{ c.name }}</span><span class="mono" style="font-weight:600">{{ c.revFmt }}</span></div>
+              <div class="spark"><sc-for list="{{ c.spark }}" as="s" hint-placeholder-count="12"><div style="height:{{ s.h }};background:{{ s.bg }}"></div></sc-for></div>
+              <div class="sub" style="color:{{ c.trendColor }}">{{ c.trend }}</div>
+              <div class="sub">{{ c.stopped }} stopped · {{ c.declining }} buying less · {{ c.switches }} switching</div>
+            </button>
+          </sc-for>
+        </div>
+        <sc-if value="{{ noCats }}" hint-placeholder-val="{{ false }}"><div class="sub">No operators match these filters.</div></sc-if>
+      </div>
+      <sc-if value="{{ hasCatSel }}" hint-placeholder-val="{{ true }}">
+        <div class="card">
+          <div class="mrow"><span class="dot" style="background:{{ catSel.color }}"></span><span class="h2">{{ catSel.name }}</span></div>
+          <div class="mrow" style="align-items:flex-start"><span class="ai">AI</span><span class="para" style="font-size:14px">{{ catSel.insight }}</span></div>
+        </div>
+        <div class="row">
+          <div class="card" style="flex:3 1 560px">
+            <div><div class="h">Who is slipping in {{ catSel.name }}</div><div class="sub">Operators that stopped, cut back or switched products here · click to open</div></div>
+            <sc-if value="{{ catSel.hasWho }}" hint-placeholder-val="{{ true }}">
+              <div class="tw">
+                <table class="tbl" style="min-width:560px">
+                  <thead><tr><sc-for list="{{ catSel.whoHead }}" as="h" hint-placeholder-count="4"><th style="text-align:{{ h.align }};cursor:{{ h.cursor }}" onClick="{{ h.sort }}" onKeyDown="{{ h.key }}" tabIndex="{{ h.tab }}" aria-sort="{{ h.aria }}" title="{{ h.title }}">{{ h.label }}{{ h.arrow }}</th></sc-for></tr></thead>
+                  <tbody>
+                    <sc-for list="{{ catSel.who }}" as="w" hint-placeholder-count="4">
+                      <tr class="click" onClick="{{ w.open }}" onKeyDown="{{ w.key }}" tabIndex="0" aria-label="Open {{ w.name }}">
+                        <td><div style="font-weight:600">{{ w.name }}</div><div class="sub" style="font-size:11px">{{ w.place }}</div></td>
+                        <td><span class="pill" style="background:{{ w.status.bg }};color:{{ w.status.ink }}">{{ w.status.label }}</span> <span style="font-size:12px">{{ w.what }}</span></td>
+                        <td class="r mono">{{ w.spend }}</td>
+                        <td><span class="pill" style="background:{{ w.risk.bg }};color:{{ w.risk.ink }}">{{ w.risk.label }}</span></td>
+                      </tr>
+                    </sc-for>
+                  </tbody>
+                </table>
+              </div>
+            </sc-if>
+            <sc-if value="{{ catSel.noWho }}" hint-placeholder-val="{{ false }}"><div class="sub">Nobody is cutting back on this category.</div></sc-if>
+          </div>
+          <div class="card" style="flex:2 1 420px">
+            <div><div class="h">Which products are bought</div><div class="sub">Share of units in this category, before (Oct–Mar) vs now (Jul–Sep)</div></div>
+            <div class="bars" style="height:110px;align-items:stretch">
+              <sc-for list="{{ catSel.stack }}" as="b" hint-placeholder-count="12"><div style="display:flex;flex-direction:column;justify-content:flex-end"><div class="stk"><sc-for list="{{ b.segs }}" as="s" hint-placeholder-count="3"><div title="{{ s.title }}" style="height:{{ s.h }};background:{{ s.bg }}"></div></sc-for></div></div></sc-for>
+            </div>
+            <div class="months"><sc-for list="{{ catSel.stack }}" as="b" hint-placeholder-count="12"><div>{{ b.m }}</div></sc-for></div>
+            <table class="tbl">
+              <thead><tr><sc-for list="{{ catSel.mixHead }}" as="h" hint-placeholder-count="5"><th style="text-align:{{ h.align }};white-space:normal">{{ h.label }}</th></sc-for></tr></thead>
+              <tbody>
+                <sc-for list="{{ catSel.mixRows }}" as="m" hint-placeholder-count="3">
+                  <tr><td><span class="mrow" style="font-size:12px"><span class="dot" style="background:{{ m.color }}"></span>{{ m.name }}</span></td><td class="r mono">{{ m.prior }}</td><td class="r mono">{{ m.recent }}</td><td class="r mono nw" style="color:{{ m.deltaColor }}">{{ m.delta }}</td><td class="r mono">{{ m.gm }}</td></tr>
+                </sc-for>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <!-- ======================================================== MODEL HEALTH -->
+  <sc-if value="{{ isHealth }}" hint-placeholder-val="{{ false }}">
+    <div class="stack">
+      <div class="note" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;background:#E9F1F3;font-size:13px">
+        <span><b>Analyst area</b> — model diagnostics for the analytics team. Operator reviews don't need this page.</span>
+        <button class="link" onClick="{{ backToBusiness }}">← Back to business views</button>
+      </div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px"><div><div class="h2">Is the model working?</div><div class="sub">{{ model.version }} · trained on data through {{ model.trainedThrough }}</div></div><span class="pill" style="background:#F8EAC6;color:#7A5406">Simulated numbers — no model has been trained yet</span></div>
+        <div class="note"><b>What it predicts:</b> {{ model.label }}.</div>
+        <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(230px,1fr))">
+          <sc-for list="{{ model.metrics }}" as="m" hint-placeholder-count="4"><div class="kv" style="border-left:3px solid #2E6F8E;padding-left:12px"><span class="sub">{{ m.label }}</span><span class="num xl">{{ m.v }}</span><span style="font-size:13px;line-height:1.45">{{ m.sub }}</span></div></sc-for>
+        </div>
+      </div>
+      <div class="row">
+        <div class="card" style="flex:3 1 520px">
+          <div><div class="h">Track record</div><div class="sub">Each month we flagged some operators as High risk. Did they really cut spending in the next 90 days?</div></div>
+          <table class="tbl">
+            <thead><tr><sc-for list="{{ backHead }}" as="h" hint-placeholder-count="6"><th style="text-align:{{ h.align }}">{{ h.label }}</th></sc-for></tr></thead>
+            <tbody><sc-for list="{{ backRows }}" as="b" hint-placeholder-count="4"><tr><td>{{ b.month }}</td><td class="r mono">{{ b.flagged }}</td><td class="r mono">{{ b.hit }}</td><td class="r mono" style="font-weight:600">{{ b.prec }}</td><td class="r mono">{{ b.eroded }}</td><td class="r mono" style="font-weight:600">{{ b.rec }}</td></tr></sc-for></tbody>
+          </table>
+        </div>
+        <div class="card" style="flex:2 1 360px">
+          <div><div class="h">Has the data changed?</div><div class="sub">If an input looks very different from the data the model learned on, its predictions may drift.</div></div>
+          <sc-for list="{{ drift }}" as="d" hint-placeholder-count="6">
+            <div style="display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) 80px;gap:8px;align-items:center;font-size:13px"><span>{{ d.feature }}</span><div class="meter" title="PSI {{ d.psi }}"><div style="width:{{ d.w }};background:{{ d.bg }}"></div></div><span class="pill" style="background:{{ d.status.bg }};color:{{ d.status.ink }};justify-self:end">{{ d.status.label }}</span></div>
+          </sc-for>
+        </div>
+      </div>
+      <div class="row">
+        <div class="card" style="flex:1 1 360px">
+          <div><div class="h">What the model pays most attention to</div><div class="sub">Share of all explanations across the sample</div></div>
+          <sc-for list="{{ importance }}" as="i" hint-placeholder-count="8">
+            <div style="display:grid;grid-template-columns:200px minmax(0,1fr) 44px;gap:8px;align-items:center;font-size:13px"><span>{{ i.label }}</span><div class="meter"><div style="width:{{ i.w }};background:#2E6F8E"></div></div><span class="mono r">{{ i.v }}</span></div>
+          </sc-for>
+        </div>
+        <div class="card" style="flex:1 1 320px">
+          <div><div class="h">How scores are spread</div><div class="sub">Operators in the sample by risk score, coloured by risk level</div></div>
+          <div style="display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:4px;height:120px;align-items:end">
+            <sc-for list="{{ scoreBins }}" as="b" hint-placeholder-count="10"><div style="display:flex;flex-direction:column;justify-content:flex-end;height:100%;align-items:center;gap:2px"><span class="mono sub" style="font-size:10px">{{ b.n }}</span><div style="width:100%;height:{{ b.h }};background:{{ b.bg }};border-radius:3px 3px 0 0"></div></div></sc-for>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:4px;font-size:10px;text-align:center" class="mono sub"><sc-for list="{{ scoreBins }}" as="b" hint-placeholder-count="10"><div>{{ b.label }}</div></sc-for></div>
+        </div>
+        <div class="card" style="flex:1 1 260px">
+          <div><div class="h">Do users find the explanations useful?</div><div class="sub">From the 👍 / 👎 buttons on each operator</div></div>
+          <div style="display:flex;gap:24px"><div><div class="sub">Helpful</div><div class="num lg" style="color:#2E8A6E">{{ feedback.useful }}</div></div><div><div class="sub">Not right</div><div class="num lg" style="color:#B63A24">{{ feedback.notRight }}</div></div></div>
+          <div class="sub">{{ feedback.rate }} rated helpful. "Not right" answers go to the analytics team for review.</div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;highThreshold&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:70,&quot;min&quot;:50,&quot;max&quot;:95,&quot;step&quot;:1,&quot;unit&quot;:&quot;%&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Risk levels&quot;},&quot;mediumThreshold&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:40,&quot;min&quot;:20,&quot;max&quot;:80,&quot;step&quot;:1,&quot;unit&quot;:&quot;%&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Risk levels&quot;},&quot;showFeedback&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;AI&quot;}}">
+const REQUIRED = ['UrlState', 'DistData', 'DistLogic', 'DistFormat', 'DistModel', 'DistNarrative', 'DistRollups', 'DistViews'];
+const missing = REQUIRED.filter(k => !window[k]);
+if (missing.length) {
+  throw new Error('Operator Churn Intelligence: missing scripts — ' + missing.join(', ') + '. Check the <script> tags in the page head.');
+}
+const { DistData: D, DistModel, DistFormat: F, DistLogic: LG, DistNarrative: T, DistViews: V } = window;
+
+// The sample book is fixed for the life of the page: risk thresholds only
+// change how operators are labelled, never the generated invoices.
+const BOOK = DistModel.buildBook(D.ROSTER, D.BOOK.baseRate);
+
+// Business views only. Model health is an analyst/admin page, reached from
+// the header's "Analyst" link, so diagnostics stay out of the review workflow.
+const TABS = [['overview', 'Overview'], ['queue', 'Risk queue'], ['operator', 'Operator'], ['categories', 'Category risk']];
+const ANALYST_VIEWS = ['health'];
+
+/**
+ * Which parts of the view live in the link (#view=operator&op=OP-10418 …).
+ * Every value is checked against what the dashboard actually offers, so a
+ * hand-edited or stale link falls back to the default view.
+ */
+const U = window.UrlState;
+const URL_SPEC = {
+  view: { param: 'view', def: 'overview', valid: U.oneOf([...TABS.map(t => t[0]), ...ANALYST_VIEWS]) },
+  opId: { param: 'op', def: BOOK[0].id, valid: v => BOOK.some(o => o.id === v) },
+  catIdx: { param: 'cat', def: 0, valid: U.intIn(0, 9), parse: U.toInt },
+  catName: { param: 'category', def: null, valid: U.oneOf(D.CATEGORY_NAMES) },
+  qTier: { param: 'risk', def: 'All', valid: U.oneOf(['All', 'high', 'medium']) },
+  qScope: { param: 'pattern', def: 'All', valid: U.oneOf(['All', ...Object.keys(LG.SCOPE)]) },
+  qTeam: { param: 'team', def: 'All', valid: U.oneOf(['All', ...Object.keys(D.REVIEW_TEAMS).filter(k => k !== 'none')]) },
+  branch: { param: 'branch', def: 'All branches', valid: U.oneOf(['All branches', ...D.BRANCHES]) },
+  otype: { param: 'type', def: 'All types', valid: U.oneOf(['All types', ...D.OPERATOR_TYPES]) },
+  seg: { param: 'size', def: 'All', valid: U.oneOf(['All', 'S', 'M', 'L']) },
+};
+
+/** "Hide this" on the intro strip is remembered per browser; storage may be unavailable. */
+const INTRO_KEY = 'distChurn.introHidden';
+const introHidden = () => { try { return localStorage.getItem(INTRO_KEY) === '1'; } catch (e) { return false; } };
+const hideIntro = () => { try { localStorage.setItem(INTRO_KEY, '1'); } catch (e) { /* storage blocked — hide for this session only */ } };
+
+class Component extends DCLogic {
+  state = {
+    search: '', showHealthy: false, qSort: null, cSort: null, filtersOpen: false,
+    brief: false, copied: false, linkCopied: false, fb: {}, help: false, intro: !introHidden(),
+    ...U.decode(location.hash, URL_SPEC),
+  };
+
+  filtered() {
+    const s = this.state;
+    const q = s.search.trim().toLowerCase();
+    return BOOK.filter(o =>
+      (s.branch === 'All branches' || o.branch === s.branch) &&
+      (s.otype === 'All types' || o.type === s.otype) &&
+      (s.seg === 'All' || o.size === s.seg) &&
+      (!q || o.name.toLowerCase().includes(q) || o.id.toLowerCase().includes(q) || o.city.toLowerCase().includes(q)));
+  }
+
+  /**
+   * A link pasted into an already-open tab (or Back/Forward) changes only the
+   * hash, which does not reload the page — so follow it explicitly. Bound once.
+   */
+  followLinks() {
+    if (this.linksBound) return;
+    this.linksBound = true;
+    window.addEventListener('hashchange', () => this.setState({ brief: false, help: false, ...U.decode(location.hash, URL_SPEC) }));
+  }
+
+  renderVals() {
+    this.followLinks();
+    const s = this.state;
+    // Every change also rewrites the link, so the address bar always opens this view.
+    const set = p => {
+      this.setState({ linkCopied: false, ...p });
+      U.write({ ...this.state, ...p }, URL_SPEC);
+    };
+    const hi = this.props.highThreshold ?? 70, md = this.props.mediumThreshold ?? 40;
+    const tierOf = V.common.tierer(hi, md);
+    const info = V.common.classify(BOOK, tierOf);
+    const ctx = { book: BOOK, list: this.filtered(), info, state: s, set, tierOf, props: this.props };
+    const overview = V.overview.build(ctx);
+    return {
+      tabs: TABS.map(([k, label]) => ({ label, go: () => set({ view: k }), color: s.view === k ? '#FFFFFF' : '#A9ACB4', border: s.view === k ? '#4F9DA6' : 'transparent' })),
+      freshness: `Snapshot ${D.FRESHNESS.snapshot} · invoices to ${F.fmtDate(D.FRESHNESS.invoicesThrough).replace(/, \d{4}$/, '')}`,
+      freshnessDetail: `Latest invoice date received: ${F.fmtDate(D.FRESHNESS.invoicesThrough)}. Risk scored: ${F.fmtDate(D.FRESHNESS.scoredOn)}.`,
+      isOverview: s.view === 'overview', isQueue: s.view === 'queue', isOperator: s.view === 'operator',
+      isCategories: s.view === 'categories', isHealth: s.view === 'health',
+      showFilters: !ANALYST_VIEWS.includes(s.view),
+      openAnalyst: () => set({ view: 'health' }), backToBusiness: () => set({ view: 'overview' }),
+      search: s.search, onSearch: e => set({ search: e.target.value }),
+      branch: s.branch, branchOpts: ['All branches', ...D.BRANCHES], onBranch: e => set({ branch: e.target.value }),
+      otype: s.otype, otypeOpts: ['All types', ...D.OPERATOR_TYPES], onOtype: e => set({ otype: e.target.value }),
+      segOpts: [['All', 'All'], ['S', 'Small'], ['M', 'Mid'], ['L', 'Large']].map(([k, l]) => ({ label: l, pick: () => set({ seg: k }), bg: s.seg === k ? '#1B1D22' : '#FBFAF8', color: s.seg === k ? '#FFFFFF' : '#1B1D22' })),
+      tierLegend: [['high', `>${hi}%`], ['medium', `${md}–${hi}%`], ['low', `<${md}%`]].map(([k, range]) => ({ label: V.common.TIER[k].label, color: V.common.TIER[k].color, meaning: V.common.TIER[k].meaning, range })),
+      helpOpen: s.help, openHelp: () => set({ help: true }), closeHelp: () => set({ help: false }), stopClick: e => e.stopPropagation(),
+      scopeHelp: Object.keys(LG.SCOPE).map(k => ({ label: LG.SCOPE[k], hint: V.common.SCOPE_HINT[k] })),
+      guardrail: T.GUARDRAIL,
+      introOpen: s.intro, closeIntro: () => { hideIntro(); set({ intro: false }); },
+      filtersOpen: s.filtersOpen, filtersClass: s.filtersOpen ? 'open' : 'closed',
+      toggleFilters: () => set({ filtersOpen: !s.filtersOpen }),
+      filtersLabel: (() => {
+        const on = [s.search, s.branch !== 'All branches', s.otype !== 'All types', s.seg !== 'All'].filter(Boolean).length;
+        return `Filters${on ? ` (${on} on)` : ''} ${s.filtersOpen ? '▲' : '▼'}`;
+      })(),
+      copyLinkLabel: s.linkCopied ? 'Link copied' : 'Copy link',
+      copyLink: () => {
+        if (!navigator.clipboard) return;
+        navigator.clipboard.writeText(location.href).then(() => this.setState({ linkCopied: true }), () => {});
+      },
+      ...overview,
+      banner: { ...overview.banner, noFlagged: !overview.banner.hasFlagged },
+      ...V.queue.build(ctx),
+      ...V.operator.build(ctx),
+      ...V.category.build(ctx),
+      ...V.health.build(ctx),
+    };
+  }
+}
+</script>
+</body>
+</html>
