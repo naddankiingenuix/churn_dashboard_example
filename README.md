@@ -10,7 +10,19 @@ of the channel. All data is synthetic.
 | `shared/` | — | `support.js` (the dc-runtime, generated; do not edit) and `url-state.js` (keeps each view in the link) |
 | `tools/` | — | `build-single-file.js`, which makes the shareable single-file versions |
 
-## Open
+## Live
+
+Published with GitHub Pages — anyone with the link can open it, no account needed:
+
+**https://naddankiingenuix.github.io/churn_dashboard_example/**
+
+- Manufacturer: [Operator Churn Intelligence](https://naddankiingenuix.github.io/churn_dashboard_example/manufacturer-dashboard/Churn%20Dashboard.dc.html)
+- Distributor: [Operator Retention Engine](https://naddankiingenuix.github.io/churn_dashboard_example/distributor-dashboard/Distributor%20Churn%20Dashboard.dc.html)
+
+Deep links work, so `…/Churn%20Dashboard.dc.html#view=operator&op=OP-10482` opens straight
+to that operator. Pages redeploys on every push to `main`.
+
+## Open locally
 
 Double-click a dashboard's `.dc.html` file, or serve this folder:
 
